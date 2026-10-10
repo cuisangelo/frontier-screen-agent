@@ -156,6 +156,30 @@ const fill = defineTool({
   },
 });
 
+const choose = defineTool({
+  name: "choose",
+  executionMode: "sequential",
+  label: "Choose option",
+  description:
+    "Elige una opción de una lista desplegable: hace clic en la lista en (x, y), escribe el comienzo del texto de la opción " +
+    "y presiona Enter. Úsala en vez de clic + Enter sobre una lista abierta. Devuelve la pantalla: confirma que quedó la opción correcta.",
+  parameters: Type.Object({
+    x: Type.Number(),
+    y: Type.Number(),
+    field: Type.String({ description: "Nombre de la lista" }),
+    option: Type.String({ description: "Texto exacto de la opción a elegir" }),
+  }),
+  async execute(_id, p) {
+    await act("choose", async (s) => {
+      await s.click(p.x, p.y);
+      await s.type(p.option);
+      await s.press("enter");
+    });
+    trace({ action: "choose", x: p.x, y: p.y, field: p.field, option: p.option });
+    return observation(`Elegido "${p.option}" en "${p.field}".`);
+  },
+});
+
 const press = defineTool({
   name: "press",
   executionMode: "sequential",
@@ -196,6 +220,7 @@ const finish = defineTool({
     "'respuesta' solo en preguntas: el valor pedido (si son dos datos, 'dato1; dato2'). 'resumen': qué hiciste o, si falla, los datos que explican por qué.",
   parameters: Type.Object({
     estado: Type.Union([Type.Literal("terminada"), Type.Literal("fallida")]),
+    app: Type.String({ description: "Nombre de la aplicación tal como aparece en la cabecera" }),
     respuesta: Type.Optional(Type.String()),
     resumen: Type.String(),
   }),
@@ -265,7 +290,7 @@ function needsGuard(toolName: string, input: Record<string, unknown>): string | 
 }
 
 export default function (pi: ExtensionAPI) {
-  for (const tool of [observe, click, typeInto, fill, press, scroll, finish]) pi.registerTool(tool);
+  for (const tool of [observe, click, typeInto, fill, choose, press, scroll, finish]) pi.registerTool(tool);
 
   pi.on("tool_call", async (event, ctx) => {
     if (finished) return { block: true, reason: "La tarea ya fue reportada. No hagas nada más." };
