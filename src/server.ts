@@ -19,6 +19,7 @@ const DATA_DIR = required("DATA_DIR");
 const PI_BIN = required("PI_BIN");
 const AGENT_MODEL = required("AGENT_MODEL");
 const GUARD_MODEL = required("GUARD_MODEL");
+const AGENT_THINKING = required("AGENT_THINKING");
 const VIEWER_TOKEN = required("VIEWER_TOKEN");
 const PANEL_HTML = readFileSync(join(import.meta.dirname, "panel/index.html"));
 
@@ -126,6 +127,7 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
     openrouterKey: OPENROUTER_API_KEY,
     model: AGENT_MODEL,
     guardModel: GUARD_MODEL,
+    thinking: AGENT_THINKING,
     dataDir: DATA_DIR,
     deadlineMs: 270_000,
     maxCostUsd: 0.5,

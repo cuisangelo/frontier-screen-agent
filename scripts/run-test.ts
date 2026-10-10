@@ -36,6 +36,7 @@ const res = await runTask(`local-${prueba.id}-${Date.now()}`, {
   openrouterKey: key,
   model,
   guardModel: "anthropic/claude-haiku-5.5",
+  thinking: process.env.THINKING ?? "medium",
   dataDir: "data",
   deadlineMs: 270_000,
   maxCostUsd: 0.5,
@@ -57,4 +58,4 @@ console.log(JSON.stringify({ prueba: prueba.id, pass, check, estado: res.estado,
 console.log(`resumen:\n${res.resumen}`);
 
 if (!existsSync("eval/gasto.md")) writeFileSync("eval/gasto.md", "| Fecha | Qué | Modelo | Costo | Saldo |\n| --- | --- | --- | --- | --- |\n");
-appendFileSync("eval/gasto.md", `| ${new Date().toISOString()} | ${basename(pruebaPath)} (${pass ? "pasa" : "falla"}, ${seconds}s) | ${model} | $${spent.toFixed(4)} | $${after.toFixed(2)} |\n`);
+appendFileSync("eval/gasto.md", `| ${new Date().toISOString()} | ${basename(pruebaPath)} (${pass ? "pasa" : "falla"}, ${seconds}s) | ${model} (${process.env.THINKING ?? "medium"}) | $${spent.toFixed(4)} | $${after.toFixed(2)} |\n`);

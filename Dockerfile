@@ -9,6 +9,6 @@ WORKDIR /app
 COPY src ./src
 
 ENV PORT=8080 DATA_DIR=/data PI_BIN=/pnpm/pi \
-    AGENT_MODEL=anthropic/claude-sonnet-5.5 GUARD_MODEL=anthropic/claude-haiku-5.5
+    AGENT_MODEL=anthropic/claude-sonnet-5.5 GUARD_MODEL=anthropic/claude-haiku-5.5 AGENT_THINKING=high
 EXPOSE 8080
 CMD ["node", "--openssl-legacy-provider", "src/server.ts"]
