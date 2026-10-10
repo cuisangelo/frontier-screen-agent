@@ -3,6 +3,8 @@ services:
     build: .
     restart: always
     env_file: .env
+    environment:
+      AGENT_VERSION: ${AGENT_VERSION:-dev}
     volumes:
       - data:/data
 
@@ -11,6 +13,8 @@ services:
     build: .
     restart: always
     env_file: .env
+    environment:
+      READ_ONLY: "1"
     volumes:
       - data:/data:ro
 

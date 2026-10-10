@@ -22,10 +22,20 @@ const AGENT_MODEL = required("AGENT_MODEL");
 const GUARD_MODEL = required("GUARD_MODEL");
 const AGENT_THINKING = required("AGENT_THINKING");
 const VIEWER_TOKEN = required("VIEWER_TOKEN");
+const AGENT_VERSION = `${process.env.AGENT_VERSION ?? "dev"} · ${AGENT_MODEL} · ${AGENT_THINKING}`;
 const PANEL_HTML = readFileSync(join(import.meta.dirname, "panel/index.html"));
 
 type Estado = "en_curso" | "terminada" | "fallida";
-type Task = { estado: Estado; resumen: string; createdAt: string; tarea: string; costUsd?: number };
+type Task = {
+  estado: Estado;
+  resumen: string;
+  createdAt: string;
+  tarea: string;
+  costUsd?: number;
+  stopReason?: string;
+  error?: string | null;
+  version?: string;
+};
 
 const TASKS_DIR = join(DATA_DIR, "tasks");
 mkdirSync(TASKS_DIR, { recursive: true });
@@ -35,7 +45,13 @@ const running = new Map<string, AbortController>(); // desktop url → running t
 // A restart kills running agents: their tasks can only be reported as failed.
 for (const f of readdirSync(TASKS_DIR)) {
   const t = JSON.parse(readFileSync(join(TASKS_DIR, f), "utf8")) as Task;
-  if (t.estado === "en_curso") t.estado = "fallida", t.resumen = "El servicio se reinició durante la tarea.";
+  // Only the agent process owns task records; the read-only panel just reports them.
+  if (t.estado === "en_curso" && process.env.READ_ONLY !== "1") {
+    t.estado = "fallida";
+    t.resumen = "El servicio se reinició durante la tarea.";
+    t.stopReason = "reinicio";
+    writeFileSync(join(TASKS_DIR, f), JSON.stringify(t));
+  }
   tasks.set(f.replace(/\.json$/, ""), t);
 }
 
@@ -73,6 +89,23 @@ function storedTasks(): Map<string, Task> {
   return out;
 }
 
+/** The model's own messages for a task: thinking, text and tool calls, in order. */
+function readReasoning(id: string): { kind: string; text: string }[] {
+  const file = join(DATA_DIR, "traces", id, "pi.jsonl");
+  if (!existsSync(file)) return [];
+  const out: { kind: string; text: string }[] = [];
+  for (const line of readFileSync(file, "utf8").trim().split("\n").filter(Boolean)) {
+    const ev = JSON.parse(line);
+    if (ev.type !== "message_end" || ev.message?.role !== "assistant") continue;
+    for (const c of ev.message.content ?? []) {
+      if (c.type === "thinking" && c.thinking) out.push({ kind: "piensa", text: c.thinking });
+      else if (c.type === "text" && c.text) out.push({ kind: "dice", text: c.text });
+      else if (c.type === "toolCall") out.push({ kind: "usa", text: `${c.name} ${JSON.stringify(c.arguments)}` });
+    }
+  }
+  return out;
+}
+
 function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
   const path = url.pathname;
   if (path === "/panel") {
@@ -101,6 +134,8 @@ function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
   if (detail && stored.has(detail[1])) {
     return send(res, 200, { id: detail[1], ...stored.get(detail[1]), events: readEvents(detail[1]) });
   }
+  const reasoning = path.match(/^\/panel\/api\/tasks\/([\w-]+)\/reasoning$/);
+  if (reasoning && stored.has(reasoning[1])) return send(res, 200, readReasoning(reasoning[1]));
   const shot = path.match(/^\/panel\/api\/tasks\/([\w-]+)\/shot\/(\d{3}\.png)$/);
   if (shot && stored.has(shot[1])) {
     const file = join(DATA_DIR, "traces", shot[1], shot[2]);
@@ -147,14 +182,14 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
     signal: ctl.signal,
   })
     .then((r) => {
-      save(id, { ...tasks.get(id)!, estado: r.estado, resumen: r.resumen, costUsd: r.costUsd });
+      save(id, { ...tasks.get(id)!, estado: r.estado, resumen: r.resumen, costUsd: r.costUsd, stopReason: r.stopReason, error: r.error });
       if (r.app) {
         updateManual(r.app, r.traceDir, r.resumen, {
           piBin: PI_BIN, openrouterKey: OPENROUTER_API_KEY, model: GUARD_MODEL, dataDir: DATA_DIR,
         });
       }
     })
-    .catch((e: Error) => save(id, { ...tasks.get(id)!, estado: "fallida", resumen: `Error interno: ${e.message}` }))
+    .catch((e: Error) => save(id, { ...tasks.get(id)!, estado: "fallida", resumen: "Error interno del servicio.", stopReason: "error_interno", error: e.stack ?? e.message }))
     .finally(() => {
       if (running.get(url) === ctl) running.delete(url);
     });
@@ -186,7 +221,7 @@ const server = createServer(async (req, res) => {
         return send(res, 400, { error: "escritorio.url and escritorio.password are required" });
       }
       const id = randomUUID();
-      save(id, { estado: "en_curso", resumen: "", createdAt: new Date().toISOString(), tarea });
+      save(id, { estado: "en_curso", resumen: "", createdAt: new Date().toISOString(), tarea, version: AGENT_VERSION });
       send(res, 200, { task_id: id });
       startTask(id, tarea, escritorio.url, escritorio.password);
       return;

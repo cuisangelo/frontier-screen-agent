@@ -56,6 +56,10 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .step .what{margin:2px 0 6px}
 .step img{display:block;width:100%;max-width:520px;border:1px solid var(--line);cursor:zoom-in}
 .step img.big{max-width:100%;cursor:zoom-out}
+details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono);color:var(--ink-2);margin-bottom:8px}
+.reasoning{max-height:420px;overflow:auto;border:1px solid var(--line);background:var(--surface);padding:10px 14px}
+.rz{margin:0 0 8px;font-size:13px;white-space:pre-wrap}.rz b{font:600 11px var(--mono);margin-right:6px}
+.rz.piensa{color:var(--ink-2)}.rz.piensa b{color:var(--muted)}.rz.dice b{color:var(--accent)}.rz.usa{color:var(--accent-ink);font-family:var(--mono);font-size:12px}
 .login{max-width:420px;margin:80px auto;padding:24px;border:1px solid var(--line);background:var(--surface)}
 .login input{width:100%;padding:10px;margin:12px 0;background:var(--bg);border:1px solid var(--line-2);color:var(--ink);font:14px var(--mono)}
 .login button{padding:10px 16px;background:var(--accent-deep);border:1px solid var(--accent);color:var(--ink);font:500 13px var(--mono);cursor:pointer}
@@ -94,10 +98,12 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const stIcon = { terminada: "check", fallida: "x", en_curso: "clock" };
+  const STOP = { tiempo: "tiempo agotado", pi_termino: "el agente se cayó", cancelada: "cancelada", tope_costo: "tope de costo", reinicio: "reinicio del servicio", error_interno: "error interno" };
   let token = "";
   try { token = new URLSearchParams(location.search).get("token") || localStorage.getItem("panel-token") || ""; } catch {}
   let selected = null;
   let openShot = null;
+  let reasoningOpen = false;
 
   async function api(path) {
     const r = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
@@ -138,7 +144,7 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
       <span class="st ${t.estado}" title="${t.estado}">${icon(stIcon[t.estado])}</span>
       <span><p>${esc(t.tarea || "(tarea sin texto guardado)")}</p>
         <span class="meta"><span>${icon("clock")}${t.seconds ?? "–"} s</span><span>${icon("steps")}${t.actions} acciones</span>
-        <span>${icon("coins")}$${(t.costUsd || 0).toFixed(3)}</span>${t.guardBlocks ? `<span style="color:var(--orange)">${icon("shield")}${t.guardBlocks} bloqueos</span>` : ""}</span></span>
+        <span>${icon("coins")}$${(t.costUsd || 0).toFixed(3)}</span>${t.guardBlocks ? `<span style="color:var(--orange)">${icon("shield")}${t.guardBlocks} bloqueos</span>` : ""}${t.stopReason && t.stopReason !== "finish" ? `<span style="color:var(--red)">${icon("x")}${esc(STOP[t.stopReason] || t.stopReason)}</span>` : ""}</span></span>
       <span class="when">${hhmm(t.createdAt)}</span></button>`;
   }
 
@@ -166,8 +172,22 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
     box.innerHTML = `<div class="dh"><h2>${esc(t.tarea || "(tarea sin texto guardado)")}</h2>
       <span class="meta"><span class="st ${t.estado}" style="width:20px;height:20px">${icon(stIcon[t.estado])}</span><span>${t.estado}</span><span>${hhmm(t.createdAt)}</span><span>$${(t.costUsd || 0).toFixed(3)}</span></span></div>
       ${t.resumen ? `<div class="summary ${t.estado}">${esc(t.resumen)}</div>` : ""}
+      <p class="meta" style="margin:0 0 12px">${t.version ? `<span>versión: ${esc(t.version)}</span>` : ""}${t.stopReason ? `<span>cierre: ${esc(STOP[t.stopReason] || "reportó con finish")}</span>` : ""}</p>
+      ${t.error ? `<details open><summary>Error</summary><pre class="summary fallida" style="overflow:auto">${esc(t.error)}</pre></details>` : ""}
+      <details id="reasoning"><summary>Razonamiento del modelo</summary><div class="reasoning">cargando…</div></details>
       <ol class="steps">${t.events.filter((e) => !(e.observation && t.events.some((a) => a.action && a.step === e.step - 1))).map((e) => stepHtml(e, t.id)).join("")}</ol>`;
     box.scrollTop = keepScroll;
+    const det = box.querySelector("#reasoning");
+    det.open = reasoningOpen;
+    det.addEventListener("toggle", async () => {
+      reasoningOpen = det.open;
+      if (!det.open) return;
+      const items = await api(`/panel/api/tasks/${t.id}/reasoning`);
+      det.querySelector(".reasoning").innerHTML = items.length
+        ? items.map((r) => `<p class="rz ${r.kind}"><b>${r.kind}</b> ${esc(r.text)}</p>`).join("")
+        : "<p>Sin registro de razonamiento para esta tarea (versión anterior del agente).</p>";
+    });
+    if (reasoningOpen) det.dispatchEvent(new Event("toggle"));
   }
 
   async function refresh() {

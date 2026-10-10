@@ -1,7 +1,7 @@
 // Runs one task in its own pi process. The process is killed before the final
 // state is published, so nothing can act on the desktop after the report.
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "../..");
@@ -9,7 +9,18 @@ const EXTENSION = join(ROOT, "src/agent/extension.ts");
 const SYSTEM_PROMPT = readFileSync(join(ROOT, "src/agent/system-prompt.md"), "utf8");
 
 export type TaskInput = { tarea: string; wsUrl: string; password: string };
-export type TaskResult = { estado: "terminada" | "fallida"; resumen: string; costUsd: number; traceDir: string; app: string | null };
+/** Why the agent stopped: it reported, ran out of time, its process died, it was cancelled or hit the cost cap. */
+export type StopReason = "finish" | "tiempo" | "pi_termino" | "cancelada" | "tope_costo";
+export type TaskResult = {
+  estado: "terminada" | "fallida";
+  resumen: string;
+  costUsd: number;
+  traceDir: string;
+  app: string | null;
+  stopReason: StopReason;
+  /** Last lines of pi's stderr when the agent did not report normally. */
+  error: string | null;
+};
 
 export type RunOptions = {
   piBin: string;
@@ -72,6 +83,8 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
       const line = pending.slice(0, nl);
       pending = pending.slice(nl + 1);
       costUsd += messageCost(line);
+      const kept = traceLine(line);
+      if (kept) appendFileSync(join(traceDir, "pi.jsonl"), kept + "\n");
     }
   });
   let stderr = "";
@@ -81,22 +94,27 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
 
   const started = performance.now();
   let reason: string | null = null;
+  let stopReason: StopReason = "finish";
   for (;;) {
     if (existsSync(resultFile)) break;
     if (child.exitCode !== null) {
       reason = `el agente terminó sin reportar${stderr ? `: ${stderr.trim().split("\n").at(-1)}` : ""}`;
+      stopReason = "pi_termino";
       break;
     }
     if (performance.now() - started >= opt.deadlineMs) {
       reason = "se acabó el tiempo de la tarea";
+      stopReason = "tiempo";
       break;
     }
     if (opt.signal?.aborted) {
       reason = String(opt.signal.reason ?? "la tarea fue cancelada");
+      stopReason = "cancelada";
       break;
     }
     if (costUsd >= opt.maxCostUsd) {
       reason = `la tarea superó el tope de costo ($${opt.maxCostUsd})`;
+      stopReason = "tope_costo";
       break;
     }
     await new Promise((r) => setTimeout(r, 300));
@@ -115,7 +133,8 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
     estado = r.estado === "terminada" ? "terminada" : "fallida";
     resumen = composeSummary(r);
   }
-  return { estado, resumen: redact(resumen, opt.secrets), costUsd, traceDir, app };
+  const error = stopReason === "finish" ? null : redact(stderr.trim().split("\n").slice(-15).join("\n"), opt.secrets) || null;
+  return { estado, resumen: redact(resumen, opt.secrets), costUsd, traceDir, app, stopReason, error };
 }
 
 /** The evaluator reads the first number of the `respuesta:` line, so it goes first and alone. */
@@ -130,6 +149,23 @@ function redact(text: string, secrets: string[]): string {
   let out = text;
   for (const s of secrets) if (s) out = out.split(s).join("[oculto]");
   return out;
+}
+
+/**
+ * Keeps the parts of pi's event stream needed to debug a task: the model's
+ * messages (text, thinking, tool calls), tool results and errors. Streaming
+ * deltas are dropped and images are replaced, since screenshots are saved apart.
+ */
+function traceLine(line: string): string | null {
+  if (!line.startsWith("{")) return null;
+  let ev: any;
+  try {
+    ev = JSON.parse(line);
+  } catch {
+    return null;
+  }
+  if (ev.type === "message_update" || ev.type === "tool_execution_update") return null;
+  return JSON.stringify(ev, (_k, v) => (v && typeof v === "object" && v.type === "image" ? { type: "image", data: "[captura aparte]" } : v));
 }
 
 function messageCost(line: string): number {
