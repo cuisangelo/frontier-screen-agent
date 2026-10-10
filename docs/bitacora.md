@@ -44,6 +44,7 @@ cada guardado, un proceso por tarea y medición con un banco de pruebas propio.
 | 15:30 | Ticket FR-0153 "La app cambió de tema": ya estábamos adaptados | `docs/incidente-FR-0153.md` |
 | 15:42 | Aviso de tiempo corregido: el agente termina si le faltan uno o dos pasos | `d876b83` |
 | 16:00 | SIGECOM pasa de v3.9 a v4.2: corremos el banco completo sobre el tema nuevo | `data/evidencia/sigecom-4.2/` |
+| 16:19 | Tema nuevo: 14 de 14 sin tocar el código (antes 14 de 14); 63 s frente a 52 s por reto | `tema-nuevo-bench.log` |
 
 ## Errores nuestros y cómo los corregimos
 

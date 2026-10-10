@@ -67,9 +67,26 @@ El diseño nunca dependió de la forma de la app:
 Corrida 1 del set oculto: 33 de 56, la mayoría con la v1. Las tareas que fallaban con la v1
 (cancelaciones con reverso, citas con autorización, notas por inasistencia) terminan con la v3.
 
+### Antes y después en la misma app
+
+A las 16:00 el escritorio de pruebas (SIGECOM) también pasó al tema 4.2. Corrimos encima el mismo
+banco que usábamos con el tema anterior, con el mismo agente y sin tocar el código: Sonnet 5.5 con
+razonamiento "high".
+
+| Banco | Tema 3.9 | Tema 4.2 |
+| --- | --- | --- |
+| 9 retos propios (R01–R09) | 9 de 9 · 52 s · $0.050 por tarea | 9 de 9 · 63 s · $0.071 por tarea |
+| 5 tareas de ejemplo del reto (E1–E5) | 5 de 5 | 5 de 5 · 70 s · $0.073 por tarea |
+
+En las 14 tareas el agente cerró el aviso con "Entendido", buscó con "Filtrar" y guardó con
+"Aplicar" a la derecha. Las que debían fallar fallaron con la razón correcta: homónimos, clave
+secreta, borrado masivo y pedido inexistente. Cada tarea tarda unos 11 s más que con el tema
+anterior: el aviso nuevo y los diálogos de confirmación suman pasos.
+
+Capturas en `data/evidencia/sigecom-3.9/08` (Guardar a la izquierda) y `sigecom-4.2/04` (Aplicar
+a la derecha); log en `data/evidencia/bancos/tema-nuevo-bench.log`.
+
 ## Lo que queda
 
-- El escritorio de pruebas todavía muestra el tema anterior. Cuando reciba el tema nuevo, corremos
-  el banco de retos encima para comparar antes y después en la misma app.
 - La falla que queda en la corrida 2 no viene del tema: el agente se quedó sin tiempo a un clic de
   guardar. Lo corregimos con un aviso de tiempo que prioriza terminar.
