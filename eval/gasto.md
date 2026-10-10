@@ -5,3 +5,4 @@
 | 2026-10-10T17:41:31.993Z | E3-facturas-vencidas.json (pasa, 99s) | anthropic/claude-sonnet-5.5 | $0.0801 | $44.69 |
 | 2026-10-10T17:44:21.583Z | E4-exportar-pedidos.json (pasa, 162s) | anthropic/claude-sonnet-5.5 | $0.1989 | $44.46 |
 | 2026-10-10T17:45:22.262Z | E5-homonimos.json (pasa, 53s) | anthropic/claude-sonnet-5.5 | $0.0198 | $44.43 |
+| 2026-10-10T18:00:28.573Z | E5-homonimos.json (pasa, 44s) | anthropic/claude-sonnet-5.5 | $0.0000 | $44.34 |
