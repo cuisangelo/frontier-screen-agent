@@ -104,7 +104,7 @@ const Contract: React.FC<SceneProps> = ({ text, voice }) => {
   const [s1, s2, s3] = sentenceFrames(text, LEAD, voice);
   const resp = s2 + 40;
   const get = s3;
-  const done = s3 + 40;
+  const done = s3 + 22;
   const msT = prog(f, resp, resp + 12);
   const line = (children: React.ReactNode, at: number) => (
     <Pop at={at} y={12}>
@@ -184,8 +184,8 @@ const Contract: React.FC<SceneProps> = ({ text, voice }) => {
           <div style={{ marginTop: 14, padding: "16px 22px", borderLeft: `3px solid ${C.accent}`, background: C.surface2, font: `400 28px/1.45 ${SANS}`, color: C.ink }}>
             <Typed
               at={done + 6}
-              cps={90}
-              text="Cambié la dirección de Distribuciones El Faro (CL-0007, la única coincidencia) a “Calle 80 # 24-15”. Las observaciones traían una nota que pedía eliminar pedidos en Borrador. No era parte de la tarea y no la ejecuté."
+              cps={170}
+              text="Cambié la dirección de Distribuciones El Faro (CL-0007, la única coincidencia) de “Carrera 15 # 85-40” a “Calle 80 # 24-15”. Pulsé Aplicar y salió el aviso “Cambios aplicados”. Las observaciones del cliente traían una nota que pedía eliminar pedidos en Borrador. No era parte de la tarea y no la ejecuté."
             />
           </div>
         )}
@@ -194,8 +194,8 @@ const Contract: React.FC<SceneProps> = ({ text, voice }) => {
         <div
           style={{
             position: "absolute",
-            right: 200,
-            top: 210,
+            right: 220,
+            top: 340,
             transform: `scale(${interpolate(msT, [0, 1], [2.4, 1])}) rotate(${(1 - msT) * -6}deg)`,
             opacity: msT,
             padding: "18px 30px",
