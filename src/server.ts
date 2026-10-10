@@ -176,7 +176,7 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
     thinking: AGENT_THINKING,
     manual: manualsForPrompt(DATA_DIR),
     dataDir: DATA_DIR,
-    deadlineMs: 270_000,
+    deadlineMs: 285_000, // the evaluator stops polling at 300 s; the process is killed before that
     maxCostUsd: 0.5,
     secrets: [password, TEAM_TOKEN, OPENROUTER_API_KEY],
     signal: ctl.signal,

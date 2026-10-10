@@ -64,9 +64,12 @@ async function act<T>(name: string, fn: (s: Screen) => Promise<T>): Promise<T> {
 
 function timeLeft(): string {
   const secs = Math.round((DEADLINE - Date.now()) / 1000);
-  return secs < 40
-    ? `Quedan ${secs} s: termina YA con finish ('fallida' si no verificaste el resultado).`
-    : `Quedan ${secs} s.`;
+  if (secs < 15) return `Quedan ${secs} s: termina YA con finish ('fallida' si no verificaste el resultado).`;
+  if (secs < 60) {
+    return `Quedan ${secs} s. Si te faltan uno o dos pasos para terminar (por ejemplo guardar y verificar), hazlos ya; ` +
+      `si te falta más, termina con finish explicando qué quedó hecho.`;
+  }
+  return `Quedan ${secs} s.`;
 }
 
 async function observation(note: string) {
