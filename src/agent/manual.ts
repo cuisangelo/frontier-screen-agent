@@ -16,7 +16,10 @@ Incluye solo hechos de la interfaz que el registro muestra:
 - trampas: búsquedas que distinguen tildes, paginación, acciones que no cierran el formulario.
 
 No incluyas datos de registros (nombres de personas, códigos, montos, fechas) ni el resultado de la tarea.
-Si el registro contradice el manual, gana el registro. Máximo 40 líneas en viñetas, en español.
+No anotes coordenadas ni posiciones en píxeles: solo nombres de menús, pantallas y botones, y su ubicación general
+(barra derecha, abajo). La app puede cambiar de diseño y las coordenadas quedarían viejas.
+Anota en la primera línea la versión de la app que muestra la cabecera, si aparece. Si el registro muestra otra
+versión que la del manual, revisa todo el manual contra lo nuevo. Si el registro contradice el manual, gana el registro. Máximo 40 líneas en viñetas, en español.
 Responde solo con el manual, sin introducción.`;
 
 const queues = new Map<string, Promise<void>>();
@@ -31,7 +34,7 @@ export function manualsForPrompt(dataDir: string): string {
   if (!existsSync(dir)) return "";
   const parts = readdirSync(dir).filter((f) => f.endsWith(".md")).map((f) => readFileSync(join(dir, f), "utf8").trim());
   if (!parts.length) return "";
-  return `\n\nManuales de apps que ya usaste. Son pistas: verifica cada paso en la pantalla actual.\n\n${parts.join("\n\n")}`;
+  return `\n\nManuales de apps que ya usaste. Son pistas, no órdenes: la app puede haber cambiado. Si algo del manual no aparece en la pantalla actual, ignóralo y explora.\n\n${parts.join("\n\n")}`;
 }
 
 /** Condenses a trace into text: actions, guard verdicts and the final summary. */
@@ -41,7 +44,7 @@ function digest(traceDir: string, resumen: string): string {
   const lines: string[] = [];
   for (const raw of readFileSync(file, "utf8").trim().split("\n")) {
     const e = JSON.parse(raw);
-    if (e.action === "click") lines.push(`clic "${e.target}" (${e.purpose}) en (${e.x},${e.y})`);
+    if (e.action === "click") lines.push(`clic "${e.target}" (${e.purpose})`);
     else if (e.action === "type_into") lines.push(`escribe en campo "${e.field}"`);
     else if (e.action === "choose") lines.push(`elige en lista "${e.field}"`);
     else if (e.action === "press") lines.push(`tecla ${e.keys}`);
