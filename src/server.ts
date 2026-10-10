@@ -90,6 +90,14 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET" && path === "/health") {
       return send(res, existsSync(PI_BIN) ? 200 : 503, { ok: existsSync(PI_BIN) });
     }
+    if (req.method === "GET" && path === "/") {
+      return send(res, 200, {
+        servicio: "Operador: una API sobre la pantalla (Reto 1, Frontier)",
+        endpoints: ["GET /health", "POST /tasks", "GET /tasks/{task_id}"],
+        auth: "Authorization: Bearer <token del equipo> en /tasks",
+        diseno: "https://frontier.cuisangelo.com/system-design",
+      });
+    }
     if (!authorized(req)) return send(res, 401, { error: "unauthorized" });
 
     if (req.method === "POST" && path === "/tasks") {
