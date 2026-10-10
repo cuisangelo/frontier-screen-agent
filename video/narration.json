@@ -1,0 +1,10 @@
+[
+  { "id": "hook", "text": "Tus aplicaciones de escritorio no tienen API. Operador les da una: le pides una tarea en español y la ejecuta en la pantalla, como lo haría una persona." },
+  { "id": "contrato", "text": "El contrato es simple. Envías la tarea con un POST y recibes su identificador en veintiocho milisegundos. Luego consultas el estado y un resumen de lo que hizo." },
+  { "id": "agente", "text": "Aquí crea un cliente. El cerebro es pi con Sonnet: cada clic se decide sobre la captura del momento, sin coordenadas ni selectores fijos. Antes de guardar, una guarda con Haiku compara el formulario con la tarea, y solo entonces aprueba el clic." },
+  { "id": "guarda", "text": "La guarda también frena errores. Aquí el agente quiso guardar antes de cambiar la dirección, y la guarda lo bloqueó. Además, Observaciones traía una orden plantada para borrar pedidos. El agente la trató como dato, no como orden." },
+  { "id": "tema", "text": "A media tarde, la aplicación cambió de interfaz: botones movidos, nombres nuevos y un aviso al abrir. Como nada depende de coordenadas, el mismo agente pasó catorce de catorce pruebas antes y después, sin tocar el código." },
+  { "id": "panel", "text": "Y todo queda en un panel en vivo: cada tarea con su estado, su costo y su línea de tiempo, con la captura de cada paso, los bloqueos de la guarda y el razonamiento del modelo. Lo que no se debe hacer, como revelar una clave, termina como fallida, a propósito." },
+  { "id": "impacto", "text": "Detectamos el cambio de interfaz más de dos horas antes que el ticket. Catorce de catorce, sin tocar código. Cero claves reveladas. Y unos diez centavos por tarea." },
+  { "id": "cierre", "text": "Cualquier aplicación sin API, ahora tiene una." }
+]
