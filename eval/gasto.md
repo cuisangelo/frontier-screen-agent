@@ -47,3 +47,4 @@
 | 2026-10-10T21:19:17.334Z | R09.json (pasa, 60s) | anthropic/claude-sonnet-5.5 (high) | $0.1795 | $30.45 |
 
 Banco del tema 4.2 (21:02–21:19 UTC, 14 tareas): costo real según `pi` $1.006 ($0.072 por tarea). La columna "Costo" de esas filas es la baja del saldo e incluye la corrida 2 del set oculto, que corría al mismo tiempo.
+| 2026-10-10T21:52:00Z | E2 por el entrypoint local, para el video | anthropic/claude-sonnet-5.5 (high) | $0.0668 (pi) | — |
