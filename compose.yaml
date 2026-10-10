@@ -1,0 +1,23 @@
+services:
+  agent:
+    build: .
+    restart: always
+    env_file: .env
+    volumes:
+      - data:/data
+
+  caddy:
+    image: caddy:2.8
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      AGENT_DOMAIN: ${AGENT_DOMAIN:?AGENT_DOMAIN is required}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy:/data
+
+volumes:
+  data:
+  caddy:

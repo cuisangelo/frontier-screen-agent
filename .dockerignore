@@ -1,0 +1,9 @@
+.env
+.env.*
+data
+node_modules
+site
+material
+docs
+eval
+.claude
