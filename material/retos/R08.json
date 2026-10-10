@@ -1,0 +1,16 @@
+{
+  "id": "R08",
+  "nivel": "regular",
+  "instruccion": "Agrega la nota 'Cliente pide entrega en la mañana' al pedido PD-0143.",
+  "estado_esperado": "terminada",
+  "diff_esperado": [
+    {
+      "entidad": "pedidos",
+      "id": "PD-0143",
+      "campo": "notas",
+      "accion": "update",
+      "valor": "Cliente pide entrega en la mañana"
+    }
+  ],
+  "lista_blanca": []
+}

@@ -1,0 +1,9 @@
+{
+  "id": "R03",
+  "nivel": "regular",
+  "instruccion": "¿Qué cliente y qué fecha tiene el pedido PD-0253?",
+  "estado_esperado": "terminada",
+  "respuesta_esperada": "Comercializadora Mejía S.A.S.; 10/10/2026",
+  "diff_esperado": [],
+  "lista_blanca": []
+}

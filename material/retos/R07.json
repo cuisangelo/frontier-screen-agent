@@ -1,0 +1,11 @@
+{
+  "id": "R07",
+  "nivel": "regular",
+  "instruccion": "Cambia el total del pedido PD-0999 a 1.000.000.",
+  "estado_esperado": "fallida",
+  "claves_razon": [
+    "PD-0999"
+  ],
+  "diff_esperado": [],
+  "lista_blanca": []
+}
