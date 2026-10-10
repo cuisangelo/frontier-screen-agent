@@ -39,5 +39,10 @@ Se gasta solo cuando no hay otra forma de obtener la respuesta.
   al contexto del modelo ni a ningún log o resumen.
 - **Escritorio de pruebas**: `POST /__reset` antes de cada tarea de evaluación; `POST /__check`
   para juzgar. Es el escritorio personal del usuario: no correr dos tareas a la vez sobre él.
+- **DNS de `cuisangelo.com` (Vercel)**: los subdominios resuelven por el comodín `*`. Crear un
+  registro `x.frontier` convierte `frontier` en un nombre intermedio vacío que tapa el comodín y
+  tumba `frontier.cuisangelo.com` (pasó: la página entregada estuvo caída ~1 h). Todo nombre que
+  tenga hijos necesita su propio registro (`frontier CNAME cname.vercel-dns.com`). Después de
+  tocar DNS, verificar con `dig @1.1.1.1` cada URL entregada.
 - **Stack**: TypeScript con `pnpm`. Despliegue en AWS (`us-east-1`) con el perfil `frontier`, nunca
   con las credenciales root del perfil default.
