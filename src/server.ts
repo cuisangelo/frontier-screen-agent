@@ -4,6 +4,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { join } from "node:path";
+import { manualsForPrompt, updateManual } from "./agent/manual.ts";
 import { runTask } from "./agent/run-task.ts";
 
 const required = (name: string): string => {
@@ -128,13 +129,21 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
     model: AGENT_MODEL,
     guardModel: GUARD_MODEL,
     thinking: AGENT_THINKING,
+    manual: manualsForPrompt(DATA_DIR),
     dataDir: DATA_DIR,
     deadlineMs: 270_000,
     maxCostUsd: 0.5,
     secrets: [password, TEAM_TOKEN, OPENROUTER_API_KEY],
     signal: ctl.signal,
   })
-    .then((r) => save(id, { ...tasks.get(id)!, estado: r.estado, resumen: r.resumen, costUsd: r.costUsd }))
+    .then((r) => {
+      save(id, { ...tasks.get(id)!, estado: r.estado, resumen: r.resumen, costUsd: r.costUsd });
+      if (r.app) {
+        updateManual(r.app, r.traceDir, r.resumen, {
+          piBin: PI_BIN, openrouterKey: OPENROUTER_API_KEY, model: GUARD_MODEL, dataDir: DATA_DIR,
+        });
+      }
+    })
     .catch((e: Error) => save(id, { ...tasks.get(id)!, estado: "fallida", resumen: `Error interno: ${e.message}` }))
     .finally(() => {
       if (running.get(url) === ctl) running.delete(url);

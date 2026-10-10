@@ -9,7 +9,7 @@ const EXTENSION = join(ROOT, "src/agent/extension.ts");
 const SYSTEM_PROMPT = readFileSync(join(ROOT, "src/agent/system-prompt.md"), "utf8");
 
 export type TaskInput = { tarea: string; wsUrl: string; password: string };
-export type TaskResult = { estado: "terminada" | "fallida"; resumen: string; costUsd: number; traceDir: string };
+export type TaskResult = { estado: "terminada" | "fallida"; resumen: string; costUsd: number; traceDir: string; app: string | null };
 
 export type RunOptions = {
   piBin: string;
@@ -17,6 +17,8 @@ export type RunOptions = {
   model: string;
   guardModel: string;
   thinking: string;
+  /** Manuals of known apps, appended to the system prompt as hints. */
+  manual: string;
   dataDir: string;
   deadlineMs: number;
   maxCostUsd: number;
@@ -39,7 +41,7 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
       "--no-prompt-templates", "--no-themes",
       "-e", EXTENSION,
       "--provider", "openrouter", "--model", opt.model, "--thinking", opt.thinking,
-      "--system-prompt", SYSTEM_PROMPT,
+      "--system-prompt", SYSTEM_PROMPT + opt.manual,
       `Tarea: ${input.tarea}`,
     ],
     {
@@ -105,13 +107,15 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
   await exited;
 
   let estado: TaskResult["estado"] = "fallida";
+  let app: string | null = null;
   let resumen = `No terminó: ${reason}.`;
   if (existsSync(resultFile)) {
-    const r = JSON.parse(readFileSync(resultFile, "utf8")) as { estado: string; respuesta?: string; resumen: string };
+    const r = JSON.parse(readFileSync(resultFile, "utf8")) as { estado: string; app?: string; respuesta?: string; resumen: string };
+    app = r.app ?? null;
     estado = r.estado === "terminada" ? "terminada" : "fallida";
     resumen = composeSummary(r);
   }
-  return { estado, resumen: redact(resumen, opt.secrets), costUsd, traceDir };
+  return { estado, resumen: redact(resumen, opt.secrets), costUsd, traceDir, app };
 }
 
 /** The evaluator reads the first number of the `respuesta:` line, so it goes first and alone. */
