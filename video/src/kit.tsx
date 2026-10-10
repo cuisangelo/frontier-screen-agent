@@ -288,7 +288,15 @@ export const Screen: React.FC<{ beats: Beat[]; end: number; title: string }> = (
         {b.action && <Ripple x={pt.sx} y={pt.sy} t={rip} color={toneColor(tone)} />}
         {b.action && <Cursor x={cur.sx} y={cur.sy} pressed={pressed} />}
         {b.label && (
-          <div style={{ position: "absolute", left: Math.min(pt.sx + 34, W - 620), top: Math.min(pt.sy + 30, H - 80), opacity: labelT, transform: `translateY(${(1 - labelT) * 14}px)` }}>
+          <div
+            style={{
+              position: "absolute",
+              ...(pt.sx > W * 0.6 ? { right: W - pt.sx + 34 } : { left: pt.sx + 34 }),
+              top: pt.sy > H * 0.7 ? pt.sy - 100 : pt.sy + 30,
+              opacity: labelT,
+              transform: `translateY(${(1 - labelT) * 14}px)`,
+            }}
+          >
             <Chip tone={tone}>{b.label}</Chip>
           </div>
         )}

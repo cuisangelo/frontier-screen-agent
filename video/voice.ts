@@ -28,13 +28,13 @@ async function openai(text: string, out: string): Promise<void> {
   if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
   const raw = `${out}.raw.wav`;
   writeFileSync(raw, Buffer.from(await res.arrayBuffer()));
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", raw, "-ar", "48000", "-ac", "2", out]);
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", raw, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-ac", "2", out]);
 }
 
 function say(text: string, out: string): void {
   const aiff = `${out}.aiff`;
   execFileSync("say", ["-v", "Paulina", "-r", "178", "-o", aiff, text]);
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", aiff, "-ar", "48000", "-ac", "2", out]);
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", aiff, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-ac", "2", out]);
 }
 
 const timeline: { id: string; text: string; seconds: number }[] = [];

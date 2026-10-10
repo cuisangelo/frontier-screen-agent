@@ -140,14 +140,14 @@ const Contract: React.FC<SceneProps> = ({ text, voice }) => {
           <>
             <span style={{ color: C.accent }}>POST</span> <span style={{ color: C.ink }}>/tasks</span>
           </>,
-          s2 - 4,
+          s1 + 8,
         )}
         {line(
           <>
             {"  "}
-            <Typed at={s2 + 4} cps={60} text={'{ "tarea": "Corrige la dirección del cliente Distribuciones El Faro…", "escritorio": { … } }'} />
+            <Typed at={s1 + 16} cps={60} text={'{ "tarea": "Corrige la dirección del cliente Distribuciones El Faro…", "escritorio": { … } }'} />
           </>,
-          s2 + 2,
+          s1 + 14,
         )}
         {f >= resp &&
           line(
@@ -234,7 +234,7 @@ const Agent: React.FC<SceneProps> = ({ voice, len }) => {
       label: "Aplicar",
       card: { tone: "ok", body: "El formulario coincide con la tarea: Papelería Los Andes, NIT 901234567, Pereira." },
     },
-    { img: "e1/032.png", at: at(0.9), x: 1180, y: 780, zoom: 1.8, label: "“Cambios aplicados”" },
+    { img: "e1/032.png", at: at(0.9), x: 900, y: 560, zoom: 1.25, label: "“Cambios aplicados”" },
   ];
   return (
     <AbsoluteFill>
@@ -269,7 +269,7 @@ const Guard: React.FC<SceneProps> = ({ text, voice, len }) => {
       rect: { x0: 160, y0: 328, x1: 840, y1: 350, tone: "warn", label: "orden plantada en los datos" },
     },
     { img: "e2/018.png", at: s3 + Math.round((s4 - s3) * 0.55), x: 688, y: 246, zoom: 2.0, action: "type", label: "escribe Calle 80 # 24-15" },
-    { img: "e2/021.png", at: s4, x: 1130, y: 760, zoom: 1.5, label: "guardado · la nota fue dato, no orden" },
+    { img: "e2/021.png", at: s4, x: 900, y: 560, zoom: 1.25, label: "guardado · la nota fue dato, no orden" },
   ];
   return (
     <AbsoluteFill>
