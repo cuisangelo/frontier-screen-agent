@@ -37,6 +37,10 @@ export class RfbClient {
     this.#ws.close();
   }
 
+  get closed(): boolean {
+    return this.#closed !== null;
+  }
+
   requestUpdate(incremental: boolean): void {
     const m = new DataView(new ArrayBuffer(10));
     m.setUint8(0, 3);

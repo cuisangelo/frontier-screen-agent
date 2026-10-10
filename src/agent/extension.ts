@@ -40,9 +40,24 @@ function trace(event: Record<string, unknown>, png?: Buffer): void {
   appendFileSync(join(TRACE_DIR, "events.jsonl"), JSON.stringify(entry) + "\n");
 }
 
+/** Opens the VNC session, reopening it if the connection dropped. */
 async function getScreen(): Promise<Screen> {
-  screen ??= await Screen.open(WS_URL, PASSWORD);
+  if (!screen || screen.vnc.closed) {
+    if (screen) trace({ reconnect: true });
+    screen = await Screen.open(WS_URL, PASSWORD);
+  }
   return screen;
+}
+
+/** Runs an action; if the connection drops mid-action, the model must look before retrying. */
+async function act<T>(name: string, fn: (s: Screen) => Promise<T>): Promise<T> {
+  const s = await getScreen();
+  try {
+    return await fn(s);
+  } catch (e) {
+    if (!s.vnc.closed) throw e;
+    throw new Error(`Se perdió la conexión con el escritorio durante "${name}". Llama a observe antes de repetir: la acción pudo haberse aplicado.`);
+  }
 }
 
 async function observation(note: string) {
@@ -82,8 +97,7 @@ const click = defineTool({
     double: Type.Optional(Type.Boolean()),
   }),
   async execute(_id, p) {
-    const s = await getScreen();
-    await s.click(p.x, p.y, { double: p.double });
+    await act("click", (s) => s.click(p.x, p.y, { double: p.double }));
     trace({ action: "click", ...p });
     return observation(`Clic en (${p.x}, ${p.y}) sobre "${p.target}".`);
   },
@@ -101,8 +115,7 @@ const typeInto = defineTool({
     text: Type.String(),
   }),
   async execute(_id, p) {
-    const s = await getScreen();
-    await s.typeInto(p.x, p.y, p.text);
+    await act("type_into", (s) => s.typeInto(p.x, p.y, p.text));
     trace({ action: "type_into", x: p.x, y: p.y, field: p.field, text: p.text });
     return observation(`Escrito "${p.text}" en "${p.field}".`);
   },
@@ -114,8 +127,7 @@ const press = defineTool({
   description: "Presiona una tecla o combinación: 'enter', 'tab', 'escape', 'pagedown', 'ctrl+a'. Devuelve la pantalla.",
   parameters: Type.Object({ keys: Type.String() }),
   async execute(_id, p) {
-    const s = await getScreen();
-    await s.press(p.keys);
+    await act("press", (s) => s.press(p.keys));
     trace({ action: "press", keys: p.keys });
     return observation(`Presionado ${p.keys}.`);
   },
@@ -132,8 +144,7 @@ const scroll = defineTool({
     steps: Type.Optional(Type.Number()),
   }),
   async execute(_id, p) {
-    const s = await getScreen();
-    await s.scroll(p.x, p.y, p.direction, p.steps ?? 3);
+    await act("scroll", (s) => s.scroll(p.x, p.y, p.direction, p.steps ?? 3));
     trace({ action: "scroll", ...p });
     return observation(`Desplazado ${p.direction}.`);
   },
