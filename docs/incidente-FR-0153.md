@@ -6,6 +6,19 @@ alta, abierto a las 15:30.
 **Qué cambió, según el ticket**: botones movidos de lugar, etiquetas distintas y un modal nuevo al
 abrir la app. El set de evaluación oculto corre sobre el tema nuevo.
 
+## Línea de tiempo
+
+| Hora (Bogotá) | Qué pasó |
+| --- | --- |
+| 13:06 | Primera tarea del set oculto: vemos el aviso "Novedades de la versión 4.2" |
+| 13:30 | Guarda con evidencia y memoria de guardados aprobados (`5dd6c69`) |
+| 13:44 | El prompt lee los avisos de cambios y busca la barra de acciones (`4fc9343`) |
+| 14:38 | Manual sin coordenadas y separado por versión (`2c94622`) |
+| 14:47 | Versión adaptada en producción |
+| 15:30 | Se abre el ticket FR-0153 |
+
+El agente ya estaba adaptado y en producción casi una hora antes del ticket.
+
 ## Detección
 
 Lo vimos en nuestras propias trazas antes de que llegara el ticket. En la primera corrida del set
