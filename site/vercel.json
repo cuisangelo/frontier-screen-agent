@@ -1,0 +1,10 @@
+{
+  "redirects": [{ "source": "/", "destination": "/system-design", "permanent": false }],
+  "rewrites": [{ "source": "/system-design", "destination": "/index.html" }],
+  "headers": [
+    {
+      "source": "/system-design.md",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    }
+  ]
+}
