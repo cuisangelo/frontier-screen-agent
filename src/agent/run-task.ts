@@ -16,6 +16,7 @@ export type RunOptions = {
   openrouterKey: string;
   model: string;
   guardModel: string;
+  thinking: string;
   dataDir: string;
   deadlineMs: number;
   maxCostUsd: number;
@@ -37,7 +38,7 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
       "--no-builtin-tools", "--no-extensions", "--no-skills", "--no-context-files",
       "--no-prompt-templates", "--no-themes",
       "-e", EXTENSION,
-      "--provider", "openrouter", "--model", opt.model,
+      "--provider", "openrouter", "--model", opt.model, "--thinking", opt.thinking,
       "--system-prompt", SYSTEM_PROMPT,
       `Tarea: ${input.tarea}`,
     ],
@@ -53,6 +54,7 @@ export async function runTask(id: string, input: TaskInput, opt: RunOptions): Pr
         AGENT_RESULT_FILE: resultFile,
         AGENT_TRACE_DIR: traceDir,
         AGENT_GUARD_MODEL: opt.guardModel,
+        AGENT_DEADLINE: String(Date.now() + opt.deadlineMs - 15_000),
       },
       stdio: ["ignore", "pipe", "pipe"],
     },

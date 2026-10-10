@@ -19,8 +19,9 @@ const TASK = env("AGENT_TASK");
 const RESULT_FILE = env("AGENT_RESULT_FILE");
 const TRACE_DIR = env("AGENT_TRACE_DIR");
 const GUARD_MODEL = process.env.AGENT_GUARD_MODEL ?? "anthropic/claude-haiku-5.5";
+const DEADLINE = Number(env("AGENT_DEADLINE"));
 
-const COMMIT_WORDS = /\b(guardar|grabar|aceptar|confirmar|eliminar|borrar|exportar|enviar|aplicar|registrar|crear|actualizar|anular|s[ií]|ok)\b/i;
+const COMMIT_WORDS = /\b(guardar|grabar|aceptar|confirmar|eliminar|borrar|exportar|enviar|aplicar|anular|emitir|pagar|s[ií])\b/i;
 const MAX_GUARD_BLOCKS = 3;
 
 mkdirSync(TRACE_DIR, { recursive: true });
@@ -28,6 +29,7 @@ let step = 0;
 let screen: Screen | null = null;
 let finished = false;
 let guardBlocks = 0;
+const approvedCommits: string[] = [];
 
 function trace(event: Record<string, unknown>, png?: Buffer): void {
   step++;
@@ -60,6 +62,13 @@ async function act<T>(name: string, fn: (s: Screen) => Promise<T>): Promise<T> {
   }
 }
 
+function timeLeft(): string {
+  const secs = Math.round((DEADLINE - Date.now()) / 1000);
+  return secs < 40
+    ? `Quedan ${secs} s: termina YA con finish ('fallida' si no verificaste el resultado).`
+    : `Quedan ${secs} s.`;
+}
+
 async function observation(note: string) {
   const s = await getScreen();
   const png = s.png();
@@ -67,7 +76,7 @@ async function observation(note: string) {
   return {
     content: [
       { type: "image" as const, data: png.toString("base64"), mimeType: "image/png" },
-      { type: "text" as const, text: `${note}\nPantalla ${s.width}x${s.height}. Coordenadas en píxeles de esta imagen.` },
+      { type: "text" as const, text: `${note}\nPantalla ${s.width}x${s.height}. Coordenadas en píxeles de esta imagen.\n${timeLeft()}` },
     ],
     details: { step },
   };
@@ -96,6 +105,7 @@ const click = defineTool({
     y: Type.Number(),
     target: Type.String({ description: "Texto visible o descripción del elemento" }),
     purpose: Type.Union([Type.Literal("navigate"), Type.Literal("edit"), Type.Literal("commit")]),
+    evidence: Type.Optional(Type.String({ description: "Obligatorio si purpose es 'commit': qué datos ya verificaste (y en qué pantalla) y por qué este clic deja exactamente lo que pide la tarea" })),
     double: Type.Optional(Type.Boolean()),
   }),
   async execute(_id, p) {
@@ -121,6 +131,28 @@ const typeInto = defineTool({
     await act("type_into", (s) => s.typeInto(p.x, p.y, p.text));
     trace({ action: "type_into", x: p.x, y: p.y, field: p.field, text: p.text });
     return observation(`Escrito "${p.text}" en "${p.field}".`);
+  },
+});
+
+const fill = defineTool({
+  name: "fill",
+  executionMode: "sequential",
+  label: "Fill form",
+  description:
+    "Llena varios campos de un formulario en una sola llamada: por cada campo hace clic, selecciona todo y escribe. " +
+    "Devuelve una captura al final; relee todos los campos en ella. No guarda: después usa click con purpose 'commit'.",
+  parameters: Type.Object({
+    fields: Type.Array(
+      Type.Object({ x: Type.Number(), y: Type.Number(), field: Type.String(), text: Type.String() }),
+      { minItems: 1 },
+    ),
+  }),
+  async execute(_id, p) {
+    for (const f of p.fields) {
+      await act("fill", (s) => s.typeInto(f.x, f.y, f.text));
+      trace({ action: "type_into", x: f.x, y: f.y, field: f.field, text: f.text });
+    }
+    return observation(`Llenados ${p.fields.length} campos: ${p.fields.map((f) => `${f.field}="${f.text}"`).join(", ")}.`);
   },
 });
 
@@ -177,17 +209,22 @@ const finish = defineTool({
 });
 
 /** Asks a second model whether a state-changing action does exactly what the task asks. Fails closed. */
-async function guardVerdict(ctx: any, action: string): Promise<{ approve: boolean; reason: string }> {
+async function guardVerdict(ctx: any, action: string, evidence: string): Promise<{ approve: boolean; reason: string }> {
   const model = ctx.modelRegistry.find("openrouter", GUARD_MODEL);
   if (!model) return { approve: false, reason: `modelo de la guarda no disponible: ${GUARD_MODEL}` };
   const png = (await getScreen()).png();
   const prompt =
-    `Eres un supervisor. Un agente opera una aplicación por pantalla.\n` +
+    `Eres un supervisor. Un agente opera una aplicación por pantalla y está a punto de hacer una acción que puede cambiar datos.\n` +
     `Tarea original: """${TASK}"""\n` +
-    `Acción que quiere hacer ahora: ${action}\n\n` +
-    `Mira la pantalla. ¿Hacer esta acción ahora deja exactamente lo que pide la tarea y nada más? ` +
-    `Rechaza si cambiaría datos que la tarea no pidió, si los valores en pantalla no coinciden con la tarea, ` +
-    `si podría crear un duplicado, o si afecta a un registro distinto o ambiguo.\n` +
+    `Acción: ${action}\n` +
+    `Evidencia que da el agente (de pantallas anteriores): ${evidence || "(ninguna)"}\n` +
+    `Acciones que ya aprobaste en esta tarea: ${approvedCommits.length ? approvedCommits.join(" | ") : "(ninguna)"}\n\n` +
+    `Mira la pantalla actual. BLOQUEA solo si ves un problema concreto:\n` +
+    `- los valores visibles en el formulario no coinciden con lo que pide la tarea;\n` +
+    `- se cambiaría un dato que la tarea no pide, o el registro visible es otro distinto al de la tarea;\n` +
+    `- repetiría una acción ya aprobada que crearía un duplicado;\n` +
+    `- la tarea es peligrosa (borrar o cambiar varios registros sin nombrarlos) o revela un secreto.\n` +
+    `Si la pantalla es coherente con la tarea y con la evidencia, APRUEBA. No pidas pruebas de pantallas anteriores: confía en la evidencia salvo que la pantalla la contradiga.\n` +
     `Responde solo JSON: {"aprobar": true|false, "razon": "..."}`;
   try {
     const res = await ctx.modelRegistry.complete(
@@ -228,15 +265,19 @@ function needsGuard(toolName: string, input: Record<string, unknown>): string | 
 }
 
 export default function (pi: ExtensionAPI) {
-  for (const tool of [observe, click, typeInto, press, scroll, finish]) pi.registerTool(tool);
+  for (const tool of [observe, click, typeInto, fill, press, scroll, finish]) pi.registerTool(tool);
 
   pi.on("tool_call", async (event, ctx) => {
     if (finished) return { block: true, reason: "La tarea ya fue reportada. No hagas nada más." };
     const action = needsGuard(event.toolName, event.input as Record<string, unknown>);
     if (!action) return undefined;
-    const verdict = await guardVerdict(ctx, action);
+    const input = event.input as Record<string, unknown>;
+    const verdict = await guardVerdict(ctx, action, String(input.evidence ?? ""));
     trace({ guard: action, approve: verdict.approve, reason: verdict.reason });
-    if (verdict.approve) return undefined;
+    if (verdict.approve) {
+      approvedCommits.push(action);
+      return undefined;
+    }
     guardBlocks++;
     const stop = guardBlocks >= MAX_GUARD_BLOCKS
       ? " Ya van tres bloqueos: llama a finish con estado 'fallida' y explica por qué."
