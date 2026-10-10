@@ -19,9 +19,11 @@ const DATA_DIR = required("DATA_DIR");
 const PI_BIN = required("PI_BIN");
 const AGENT_MODEL = required("AGENT_MODEL");
 const GUARD_MODEL = required("GUARD_MODEL");
+const VIEWER_TOKEN = required("VIEWER_TOKEN");
+const PANEL_HTML = readFileSync(join(import.meta.dirname, "panel/index.html"));
 
 type Estado = "en_curso" | "terminada" | "fallida";
-type Task = { estado: Estado; resumen: string; createdAt: string; costUsd?: number };
+type Task = { estado: Estado; resumen: string; createdAt: string; tarea: string; costUsd?: number };
 
 const TASKS_DIR = join(DATA_DIR, "tasks");
 mkdirSync(TASKS_DIR, { recursive: true });
@@ -44,6 +46,59 @@ function authorized(req: IncomingMessage): boolean {
   const got = Buffer.from(req.headers.authorization ?? "");
   const want = Buffer.from(`Bearer ${TEAM_TOKEN}`);
   return got.length === want.length && timingSafeEqual(got, want);
+}
+
+/** Read-only panel access: header for API calls, query string for <img> tags. */
+function viewer(req: IncomingMessage, url: URL): boolean {
+  const supplied = req.headers.authorization?.replace(/^Bearer /, "") ?? url.searchParams.get("token") ?? "";
+  const got = Buffer.from(supplied);
+  const want = Buffer.from(VIEWER_TOKEN);
+  return got.length === want.length && timingSafeEqual(got, want);
+}
+
+function readEvents(id: string): Record<string, unknown>[] {
+  const file = join(DATA_DIR, "traces", id, "events.jsonl");
+  if (!existsSync(file)) return [];
+  return readFileSync(file, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+}
+
+function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
+  const path = url.pathname;
+  if (path === "/panel") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(PANEL_HTML);
+    return;
+  }
+  if (!viewer(req, url)) return send(res, 401, { error: "unauthorized" });
+  if (path === "/panel/api/tasks") {
+    const list = [...tasks.entries()].map(([id, t]) => {
+      const ev = readEvents(id);
+      const first = ev[0]?.at as string | undefined;
+      const last = ev.at(-1)?.at as string | undefined;
+      return {
+        id, ...t,
+        actions: ev.filter((e) => "action" in e).length,
+        guardBlocks: ev.filter((e) => "guard" in e && !e.approve).length,
+        seconds: first && last ? Math.round((Date.parse(last) - Date.parse(first)) / 1000) : null,
+      };
+    });
+    list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return send(res, 200, list);
+  }
+  const detail = path.match(/^\/panel\/api\/tasks\/([\w-]+)$/);
+  if (detail && tasks.has(detail[1])) {
+    return send(res, 200, { id: detail[1], ...tasks.get(detail[1]), events: readEvents(detail[1]) });
+  }
+  const shot = path.match(/^\/panel\/api\/tasks\/([\w-]+)\/shot\/(\d{3}\.png)$/);
+  if (shot && tasks.has(shot[1])) {
+    const file = join(DATA_DIR, "traces", shot[1], shot[2]);
+    if (existsSync(file)) {
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "private, max-age=86400" });
+      res.end(readFileSync(file));
+      return;
+    }
+  }
+  send(res, 404, { error: "not found" });
 }
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -85,8 +140,10 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
 }
 
 const server = createServer(async (req, res) => {
-  const path = new URL(req.url ?? "/", "http://x").pathname;
+  const url = new URL(req.url ?? "/", "http://x");
+  const path = url.pathname;
   try {
+    if (req.method === "GET" && path.startsWith("/panel")) return panelRoute(req, res, url);
     if (req.method === "GET" && path === "/health") {
       return send(res, existsSync(PI_BIN) ? 200 : 503, { ok: existsSync(PI_BIN) });
     }
@@ -108,7 +165,7 @@ const server = createServer(async (req, res) => {
         return send(res, 400, { error: "escritorio.url and escritorio.password are required" });
       }
       const id = randomUUID();
-      save(id, { estado: "en_curso", resumen: "", createdAt: new Date().toISOString() });
+      save(id, { estado: "en_curso", resumen: "", createdAt: new Date().toISOString(), tarea });
       send(res, 200, { task_id: id });
       startTask(id, tarea, escritorio.url, escritorio.password);
       return;

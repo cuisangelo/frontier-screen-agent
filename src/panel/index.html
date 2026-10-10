@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operador · Panel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%230a0a0c%27/%3E%3Crect x=%276%27 y=%273%27 width=%274%27 height=%2710%27 fill=%27%233ddc84%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0c;--surface:#141418;--surface-2:#1b1b22;--line:#2a2a33;--line-2:#3a3a48;--ink:#ececf1;--ink-2:#b4b4c0;--muted:#7e7e8c;
+  --accent:#3ddc84;--accent-deep:#0e2a1b;--accent-ink:#9af0c0;--red:#f2706a;--yellow:#f2e45c;--orange:#f0a14a;
+  --mono:"Geist Mono",ui-monospace,Menlo,monospace;--sans:"Geist",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.top{display:flex;align-items:center;gap:24px;height:56px;padding:0 24px;border-bottom:1px solid var(--line)}
+.brand{font:400 18px "Silkscreen",var(--mono);letter-spacing:.04em}
+.brand i{display:inline-block;width:7px;height:17px;background:var(--accent);margin-left:6px;vertical-align:-2px}
+.top .tag{font:500 12px var(--mono);color:var(--muted)}
+.live{margin-left:auto;display:flex;align-items:center;gap:8px;font:500 12px var(--mono);color:var(--ink-2)}
+.live b{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.live b{animation:none}}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.kpi{padding:16px 24px;border-right:1px solid var(--line)}
+.kpi:last-child{border-right:0}
+.kpi span{display:block;font:500 12px var(--mono);color:var(--muted);margin-bottom:6px}
+.kpi strong{font:600 20px var(--mono)}
+.kpi strong.ok{color:var(--accent)}.kpi strong.bad{color:var(--red)}
+.layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);min-height:calc(100vh - 56px - 77px)}
+.list{border-right:1px solid var(--line);overflow:auto;max-height:calc(100vh - 133px)}
+.row{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;width:100%;padding:14px 20px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.row:hover{background:var(--surface)}
+.row[aria-current]{background:var(--surface-2);box-shadow:inset 2px 0 0 var(--accent)}
+.st{width:24px;height:24px;display:grid;place-items:center;border:1px solid}
+.st.terminada{color:var(--accent);border-color:rgba(61,220,132,.5)}
+.st.fallida{color:var(--red);border-color:rgba(242,112,106,.5)}
+.st.en_curso{color:var(--yellow);border-color:rgba(242,228,92,.5)}
+.row p{margin:0 0 4px;color:var(--ink)}
+.meta{display:flex;flex-wrap:wrap;gap:12px;font:500 12px var(--mono);color:var(--muted)}
+.meta span{display:inline-flex;align-items:center;gap:4px}
+.when{font:500 12px var(--mono);color:var(--muted)}
+.detail{overflow:auto;max-height:calc(100vh - 133px);padding:20px 24px}
+.empty{color:var(--muted);padding:40px 24px}
+.dh h2{margin:0 0 6px;font:600 16px/1.4 var(--sans)}
+.summary{margin:14px 0 20px;padding:14px 16px;border:1px solid var(--line);background:var(--surface);white-space:pre-wrap;font-size:14px}
+.summary.terminada{border-color:rgba(61,220,132,.45)}.summary.fallida{border-color:rgba(242,112,106,.45)}
+.steps{list-style:none;margin:0;padding:0;border-left:1px solid var(--line-2);margin-left:11px}
+.step{position:relative;padding:0 0 18px 26px}
+.step .ic{position:absolute;left:-12px;top:0;width:24px;height:24px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--line-2);color:var(--accent-ink)}
+.step.guard-no .ic{color:var(--red);border-color:var(--red)}
+.step.guard-ok .ic{color:var(--accent);border-color:var(--accent)}
+.step .t{font:500 12px var(--mono);color:var(--muted)}
+.step .what{margin:2px 0 6px}
+.step img{display:block;width:100%;max-width:520px;border:1px solid var(--line);cursor:zoom-in}
+.step img.big{max-width:100%;cursor:zoom-out}
+.login{max-width:420px;margin:80px auto;padding:24px;border:1px solid var(--line);background:var(--surface)}
+.login input{width:100%;padding:10px;margin:12px 0;background:var(--bg);border:1px solid var(--line-2);color:var(--ink);font:14px var(--mono)}
+.login button{padding:10px 16px;background:var(--accent-deep);border:1px solid var(--accent);color:var(--ink);font:500 13px var(--mono);cursor:pointer}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.list,.detail{max-height:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7.5L21 10z"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M12 3v18M7 16l5 5 5-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 01-12 0zM12 18v4"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></symbol>
+  <symbol id="i-steps" viewBox="0 0 24 24"><path d="M4 18h4v-4h4v-4h4V6h4"/></symbol>
+</svg>
+
+<header class="top">
+  <span class="brand">OPERADOR<i></i></span>
+  <span class="tag">panel de tareas</span>
+  <span class="live" id="live"><b></b>en vivo · cada 5 s</span>
+</header>
+
+<main id="app"></main>
+
+<script>
+(() => {
+  const app = document.getElementById("app");
+  const icon = (id) => `<svg class="i"><use href="#i-${id}"/></svg>`;
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const stIcon = { terminada: "check", fallida: "x", en_curso: "clock" };
+  let token = "";
+  try { token = new URLSearchParams(location.search).get("token") || localStorage.getItem("panel-token") || ""; } catch {}
+  let selected = null;
+  let openShot = null;
+
+  async function api(path) {
+    const r = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+    if (r.status === 401) throw new Error("unauthorized");
+    return r.json();
+  }
+
+  function login(message) {
+    app.innerHTML = `<form class="login"><strong>Token del panel</strong><p style="color:var(--muted);margin:6px 0 0">${message}</p>
+      <input type="password" name="t" autocomplete="off" aria-label="Token del panel"><button>Entrar</button></form>`;
+    app.querySelector("form").onsubmit = (e) => {
+      e.preventDefault();
+      token = e.target.t.value.trim();
+      try { localStorage.setItem("panel-token", token); } catch {}
+      refresh();
+    };
+  }
+
+  function kpis(list) {
+    const done = list.filter((t) => t.estado !== "en_curso");
+    const ok = done.filter((t) => t.estado === "terminada").length;
+    const cost = list.reduce((s, t) => s + (t.costUsd || 0), 0);
+    const secs = done.map((t) => t.seconds).filter((s) => s != null);
+    const avg = secs.length ? Math.round(secs.reduce((a, b) => a + b, 0) / secs.length) : 0;
+    const blocks = list.reduce((s, t) => s + (t.guardBlocks || 0), 0);
+    return `<section class="kpis">
+      <div class="kpi"><span>Tareas</span><strong>${list.length}</strong></div>
+      <div class="kpi"><span>Terminadas</span><strong class="ok">${ok}</strong></div>
+      <div class="kpi"><span>Fallidas</span><strong class="bad">${done.length - ok}</strong></div>
+      <div class="kpi"><span>Costo total</span><strong>$${cost.toFixed(2)}</strong></div>
+      <div class="kpi"><span>Tiempo promedio</span><strong>${avg} s</strong></div>
+      <div class="kpi"><span>Bloqueos de la guarda</span><strong>${blocks}</strong></div>
+    </section>`;
+  }
+
+  function row(t) {
+    return `<button class="row" data-id="${t.id}" ${t.id === selected ? "aria-current=true" : ""}>
+      <span class="st ${t.estado}" title="${t.estado}">${icon(stIcon[t.estado])}</span>
+      <span><p>${esc(t.tarea || "(tarea sin texto guardado)")}</p>
+        <span class="meta"><span>${icon("clock")}${t.seconds ?? "–"} s</span><span>${icon("steps")}${t.actions} acciones</span>
+        <span>${icon("coins")}$${(t.costUsd || 0).toFixed(3)}</span>${t.guardBlocks ? `<span style="color:var(--orange)">${icon("shield")}${t.guardBlocks} bloqueos</span>` : ""}</span></span>
+      <span class="when">${hhmm(t.createdAt)}</span></button>`;
+  }
+
+  function stepHtml(e, id) {
+    let ic = "eye", cls = "", what = "";
+    if (e.guard !== undefined) {
+      ic = "shield"; cls = e.approve ? "guard-ok" : "guard-no";
+      what = `<strong>Guarda ${e.approve ? "aprueba" : "bloquea"}</strong>: ${esc(e.guard)}<br><span style="color:var(--ink-2)">${esc(e.reason)}</span>`;
+    } else if (e.action === "click") { ic = "pointer"; what = `Clic en <strong>${esc(e.target)}</strong> (${e.x}, ${e.y}) · ${esc(e.purpose)}`; }
+    else if (e.action === "type_into") { ic = "type"; what = `Escribe <strong>${esc(e.text)}</strong> en ${esc(e.field)}`; }
+    else if (e.action === "press") { ic = "key"; what = `Tecla <strong>${esc(e.keys)}</strong>`; }
+    else if (e.action === "scroll") { ic = "scroll"; what = `Desplaza ${esc(e.direction)}`; }
+    else if (e.action === "finish") { ic = "flag"; what = `Termina: <strong>${esc(e.estado)}</strong>`; }
+    else if (e.reconnect) { ic = "plug"; what = "Reconecta con el escritorio"; }
+    else if (e.observation) { ic = "eye"; what = esc(e.observation); }
+    const img = e.screenshot ? `<img loading="lazy" alt="Captura del paso ${e.step}" src="/panel/api/tasks/${id}/shot/${e.screenshot}?token=${encodeURIComponent(token)}" ${openShot === `${id}/${e.screenshot}` ? 'class="big"' : ""} data-shot="${id}/${e.screenshot}">` : "";
+    return `<li class="step ${cls}"><span class="ic">${icon(ic)}</span><div class="t">#${e.step} · ${hhmm(e.at)}</div><div class="what">${what}</div>${img}</li>`;
+  }
+
+  async function detail() {
+    const box = app.querySelector(".detail");
+    if (!selected) { box.innerHTML = `<p class="empty">Elige una tarea para ver su línea de tiempo.</p>`; return; }
+    const t = await api(`/panel/api/tasks/${selected}`);
+    const keepScroll = box.scrollTop;
+    box.innerHTML = `<div class="dh"><h2>${esc(t.tarea || "(tarea sin texto guardado)")}</h2>
+      <span class="meta"><span class="st ${t.estado}" style="width:20px;height:20px">${icon(stIcon[t.estado])}</span><span>${t.estado}</span><span>${hhmm(t.createdAt)}</span><span>$${(t.costUsd || 0).toFixed(3)}</span></span></div>
+      ${t.resumen ? `<div class="summary ${t.estado}">${esc(t.resumen)}</div>` : ""}
+      <ol class="steps">${t.events.filter((e) => !(e.observation && t.events.some((a) => a.action && a.step === e.step - 1))).map((e) => stepHtml(e, t.id)).join("")}</ol>`;
+    box.scrollTop = keepScroll;
+  }
+
+  async function refresh() {
+    if (!token) return login("Pega el token de solo lectura.");
+    let list;
+    try { list = await api("/panel/api/tasks"); } catch { return login("El token no es válido."); }
+    if (!app.querySelector(".layout")) app.innerHTML = `<div id="k"></div><div class="layout"><nav class="list" aria-label="Tareas"></nav><section class="detail" aria-live="polite"></section></div>`;
+    app.querySelector("#k").innerHTML = kpis(list);
+    app.querySelector(".list").innerHTML = list.map(row).join("") || `<p class="empty">Todavía no llegan tareas.</p>`;
+    await detail();
+  }
+
+  app.addEventListener("click", (e) => {
+    const r = e.target.closest(".row");
+    if (r) { selected = r.dataset.id; refresh(); return; }
+    const img = e.target.closest("img[data-shot]");
+    if (img) { openShot = openShot === img.dataset.shot ? null : img.dataset.shot; img.classList.toggle("big"); }
+  });
+
+  refresh();
+  setInterval(() => { if (token && document.visibilityState === "visible") refresh().catch(() => {}); }, 5000);
+})();
+</script>
+</body>
+</html>
