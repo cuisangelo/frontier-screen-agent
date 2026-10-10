@@ -18,3 +18,4 @@ pnpm exec remotion render src/index.ts Demo "$OUT/video-final.mp4" \
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT/video-final.mp4")
 echo "duration: $DUR s"
 awk -v d="$DUR" 'BEGIN { if (d > 120) { print "video is longer than 2:00"; exit 1 } }'
+node "$HERE/scene-shots.ts" "$PUB" "$OUT/video-final.mp4" "$OUT/escenas"
