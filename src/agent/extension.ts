@@ -75,6 +75,7 @@ async function observation(note: string) {
 
 const observe = defineTool({
   name: "observe",
+  executionMode: "sequential",
   label: "Observe",
   description: "Captura la pantalla actual del escritorio. Úsala al empezar y cuando no estés seguro de qué hay en pantalla.",
   parameters: Type.Object({}),
@@ -85,6 +86,7 @@ const observe = defineTool({
 
 const click = defineTool({
   name: "click",
+  executionMode: "sequential",
   label: "Click",
   description:
     "Hace clic en (x, y) y devuelve la pantalla resultante. 'target' es el texto visible o la descripción de lo que clicas. " +
@@ -105,6 +107,7 @@ const click = defineTool({
 
 const typeInto = defineTool({
   name: "type_into",
+  executionMode: "sequential",
   label: "Type into field",
   description:
     "Reemplaza el contenido de un campo: hace clic en (x, y), selecciona todo y escribe 'text'. Devuelve la pantalla. Relee el campo en la imagen para confirmar.",
@@ -123,6 +126,7 @@ const typeInto = defineTool({
 
 const press = defineTool({
   name: "press",
+  executionMode: "sequential",
   label: "Press keys",
   description: "Presiona una tecla o combinación: 'enter', 'tab', 'escape', 'pagedown', 'ctrl+a'. Devuelve la pantalla.",
   parameters: Type.Object({ keys: Type.String() }),
@@ -135,6 +139,7 @@ const press = defineTool({
 
 const scroll = defineTool({
   name: "scroll",
+  executionMode: "sequential",
   label: "Scroll",
   description: "Desplaza con la rueda del mouse en (x, y). Devuelve la pantalla.",
   parameters: Type.Object({
@@ -152,6 +157,7 @@ const scroll = defineTool({
 
 const finish = defineTool({
   name: "finish",
+  executionMode: "sequential",
   label: "Finish",
   description:
     "Termina la tarea. Llámala una sola vez. 'terminada' solo si verificaste en pantalla que el cambio quedó o leíste la respuesta. " +
