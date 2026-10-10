@@ -64,6 +64,15 @@ function readEvents(id: string): Record<string, unknown>[] {
   return readFileSync(file, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
 }
 
+/** Task records straight from disk, so a read-only panel process sees live data. */
+function storedTasks(): Map<string, Task> {
+  const out = new Map<string, Task>();
+  for (const f of readdirSync(TASKS_DIR)) {
+    out.set(f.replace(/\.json$/, ""), JSON.parse(readFileSync(join(TASKS_DIR, f), "utf8")) as Task);
+  }
+  return out;
+}
+
 function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
   const path = url.pathname;
   if (path === "/panel") {
@@ -72,8 +81,9 @@ function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
     return;
   }
   if (!viewer(req, url)) return send(res, 401, { error: "unauthorized" });
+  const stored = storedTasks();
   if (path === "/panel/api/tasks") {
-    const list = [...tasks.entries()].map(([id, t]) => {
+    const list = [...stored.entries()].map(([id, t]) => {
       const ev = readEvents(id);
       const first = ev[0]?.at as string | undefined;
       const last = ev.at(-1)?.at as string | undefined;
@@ -88,11 +98,11 @@ function panelRoute(req: IncomingMessage, res: ServerResponse, url: URL): void {
     return send(res, 200, list);
   }
   const detail = path.match(/^\/panel\/api\/tasks\/([\w-]+)$/);
-  if (detail && tasks.has(detail[1])) {
-    return send(res, 200, { id: detail[1], ...tasks.get(detail[1]), events: readEvents(detail[1]) });
+  if (detail && stored.has(detail[1])) {
+    return send(res, 200, { id: detail[1], ...stored.get(detail[1]), events: readEvents(detail[1]) });
   }
   const shot = path.match(/^\/panel\/api\/tasks\/([\w-]+)\/shot\/(\d{3}\.png)$/);
-  if (shot && tasks.has(shot[1])) {
+  if (shot && stored.has(shot[1])) {
     const file = join(DATA_DIR, "traces", shot[1], shot[2]);
     if (existsSync(file)) {
       res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "private, max-age=86400" });

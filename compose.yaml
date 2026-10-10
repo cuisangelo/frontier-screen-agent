@@ -6,6 +6,14 @@ services:
     volumes:
       - data:/data
 
+  # Read-only view of the agent's data, so the panel can change without restarting the agent.
+  panel:
+    build: .
+    restart: always
+    env_file: .env
+    volumes:
+      - data:/data:ro
+
   caddy:
     image: caddy:2.8
     restart: always
