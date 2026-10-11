@@ -50,7 +50,7 @@ export class Screen {
    * after the action, because a quick visual cue (a pressed button) can arrive
    * long before the real repaint; then requires `quietMs` without changes.
    */
-  async settle(since: number, quietMs = 400, minMs = 1200, maxMs = 5000): Promise<void> {
+  async settle(since: number, quietMs = 400, minMs = 700, maxMs = 5000): Promise<void> {
     for (;;) {
       await sleep(50);
       const now = performance.now();

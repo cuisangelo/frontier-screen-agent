@@ -70,3 +70,11 @@ Banco del tema 4.2 (21:02–21:19 UTC, 14 tareas): costo real según `pi` $1.006
 | 2026-10-11T04:06:47.095Z | R07.json (pasa, 115s) | anthropic/claude-sonnet-5.5 (high) | $0.1679 | $25.29 |
 | 2026-10-11T04:08:03.680Z | R08.json (pasa, 59s) | anthropic/claude-sonnet-5.5 (high) | $0.1035 | $25.17 |
 | 2026-10-11T04:09:11.202Z | R09.json (pasa, 48s) | anthropic/claude-sonnet-5.5 (high) | $0.0528 | $25.11 |
+| 2026-10-11T19:09:24.949Z | E1-crear-cliente.json (pasa, 70s) | anthropic/claude-sonnet-5.5 (medium) | $0.2340 | $21.86 |
+| 2026-10-11T19:11:02.967Z | E2-direccion-con-nota.json (pasa, 79s) | anthropic/claude-sonnet-5.5 (medium) | $0.2997 | $21.56 |
+| 2026-10-11T19:12:41.834Z | R05.json (pasa, 70s) | anthropic/claude-sonnet-5.5 (medium) | $0.3146 | $21.24 |
+| 2026-10-11T19:14:00.926Z | R07.json (pasa, 60s) | anthropic/claude-sonnet-5.5 (medium) | $0.2204 | $20.99 |
+| 2026-10-11T19:22:55.433Z | E1-crear-cliente.json (pasa, 109s) | anthropic/claude-sonnet-5.5 (high) | $0.3279 | $19.91 |
+| 2026-10-11T19:24:21.836Z | E2-direccion-con-nota.json (pasa, 67s) | anthropic/claude-sonnet-5.5 (high) | $0.2453 | $19.66 |
+| 2026-10-11T19:26:03.957Z | R05.json (pasa, 74s) | anthropic/claude-sonnet-5.5 (high) | $0.2719 | $19.39 |
+| 2026-10-11T19:27:37.648Z | R07.json (pasa, 72s) | anthropic/claude-sonnet-5.5 (high) | $0.2369 | $19.07 |
