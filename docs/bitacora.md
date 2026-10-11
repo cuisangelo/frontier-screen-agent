@@ -59,6 +59,25 @@ corre en local y en la demo pública.
 | 23:05 | Banco: 14 de 14, 55 s por tarea (antes 65 s), $0.080 (antes $0.072) | `mejoras-bench.log` |
 | 23:00 | Demo pública: historial, ejecutar una tarea del banco y escritorio en vivo, con cupo | [agent.frontier.cuisangelo.com/demo](https://agent.frontier.cuisangelo.com/demo) |
 
+### Corrida 3 con la versión nueva: peor en la clínica
+
+El 11 de octubre usamos la última corrida del set oculto para probar la versión nueva en producción,
+con la vuelta atrás preparada.
+
+| Corrida | Versión | Resultado |
+| --- | --- | --- |
+| 2 | `d876b83` (la entregada) | **51 de 56** |
+| 3 | versión nueva | 48 de 56 · más pasos por tarea, $8.06 frente a $5.63 |
+
+Lo que aprendimos: recortar las capturas viejas acelera cada paso, pero en las tareas largas de la
+clínica (bitácora, varias citas) el agente olvida pantallas que ya vio y vuelve a buscarlas. En el
+banco de la app de práctica las tareas son cortas y eso no se veía. Medido aparte: el razonamiento
+"medium" y Haiku no aceleran (Sonnet casi no razona en estas tareas). Esperar 700 ms en vez de 1.2 s
+por repintado sí ahorra 0.4 s por paso. La palanca real es dar menos pasos: anotar los datos clave
+antes de recortar.
+
+Producción volvió a `d876b83` para la corrida final.
+
 ## Errores nuestros y cómo los corregimos
 
 | Error | Impacto | Corrección |
