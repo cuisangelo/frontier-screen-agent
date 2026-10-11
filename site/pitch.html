@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operador · Pitch</title>
+<meta name="description" content="Operador: una API sobre la pantalla para apps que no tienen API. Video de 2 minutos y pitch. Reto 1 de Frontier, por cuisangelo.">
+<meta property="og:title" content="Operador · una API sobre la pantalla">
+<meta property="og:image" content="/media/operador-2min.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%230a0a0c%27/%3E%3Crect x=%276%27 y=%273%27 width=%274%27 height=%2710%27 fill=%27%233ddc84%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0c; --surface:#141418; --line:#2a2a33;
+  --ink:#ececf1; --ink-2:#b4b4c0; --muted:#7e7e8c;
+  --accent:#3ddc84; --accent-deep:#0e2a1b;
+  --sans:"Geist",system-ui,sans-serif; --mono:"Geist Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{font-family:"Silkscreen",var(--mono);font-size:18px;letter-spacing:.06em;color:var(--ink)}
+.brand i{display:inline-block;width:8px;height:16px;background:var(--accent);margin-left:6px;vertical-align:-2px}
+nav{display:flex;gap:20px;font-size:14px}
+.hero{padding:56px 0 32px}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.1;font-weight:600;letter-spacing:-.02em}
+.lede{color:var(--ink-2);font-size:18px;max-width:640px;margin-top:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;margin-top:32px;overflow:hidden}
+.stat{padding:18px 20px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0}
+.stat b{display:block;font-size:28px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:14px}
+section{padding:24px 0}
+h2{font-size:20px;font-weight:600;margin-bottom:12px}
+.video{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000}
+video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
+.soon{aspect-ratio:16/9;display:grid;place-items:center;text-align:center;background:var(--surface);color:var(--muted);padding:24px}
+.soon b{display:block;color:var(--ink-2);font-weight:500;margin-bottom:4px}
+.note{color:var(--muted);font-size:14px;margin-top:10px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:24px 0 48px;color:var(--muted);font-size:14px}
+@media (max-width:720px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  nav{gap:14px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="brand">OPERADOR<i></i></span>
+    <nav>
+      <a href="/system-design">Diseño</a>
+      <a href="https://github.com/cuisangelo/frontier-screen-agent">Repositorio</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Cualquier app sin API, ahora tiene una.</h1>
+    <p class="lede">Operador recibe una tarea en lenguaje natural y la ejecuta en una aplicación de escritorio viendo solo la pantalla, como lo haría una persona. Reto 1 de Frontier.</p>
+    <div class="stats">
+      <div class="stat"><b>51/56</b><span>tareas en una app nunca vista</span></div>
+      <div class="stat"><b>14/14</b><span>antes y después del cambio de interfaz</span></div>
+      <div class="stat"><b>0</b><span>claves reveladas</span></div>
+      <div class="stat"><b>$0.10</b><span>por tarea, unos 70 s</span></div>
+    </div>
+  </div>
+
+  <section id="pitch">
+    <h2>Pitch</h2>
+    <div class="video" id="pitch-slot">
+      <div class="soon"><div><b>El video del pitch aparece aquí.</b>Mientras tanto, mira el video de 2 minutos.</div></div>
+    </div>
+  </section>
+
+  <section id="video">
+    <h2>Video de 2 minutos</h2>
+    <div class="video">
+      <video controls preload="metadata" poster="/media/operador-2min.jpg" src="/media/operador-2min.mp4"></video>
+    </div>
+    <p class="note">Ejecuciones reales sobre la app de práctica: el agente operando, la guarda que revisa cada guardado, el cambio de tema y el panel.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Operador · por cuisangelo · <a href="/system-design">system design</a> · <a href="https://github.com/cuisangelo/frontier-screen-agent">código</a></div>
+</footer>
+
+<script>
+// The pitch video is published later at the same URL; until then the slot shows a note.
+fetch("/media/pitch.mp4", { method: "HEAD" }).then((r) => {
+  if (!r.ok) return;
+  document.getElementById("pitch-slot").innerHTML =
+    '<video controls preload="metadata" src="/media/pitch.mp4"></video>';
+}).catch(() => {});
+</script>
+</body>
+</html>

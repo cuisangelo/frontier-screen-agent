@@ -1,6 +1,9 @@
 {
   "redirects": [{ "source": "/", "destination": "/system-design", "permanent": false }],
-  "rewrites": [{ "source": "/system-design", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/system-design", "destination": "/index.html" },
+    { "source": "/pitch", "destination": "/pitch.html" }
+  ],
   "headers": [
     {
       "source": "/system-design.md",
