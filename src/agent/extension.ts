@@ -21,8 +21,16 @@ const TRACE_DIR = env("AGENT_TRACE_DIR");
 const GUARD_MODEL = process.env.AGENT_GUARD_MODEL ?? "anthropic/claude-haiku-5.5";
 const DEADLINE = Number(env("AGENT_DEADLINE"));
 
-const COMMIT_WORDS = /\b(guardar|grabar|aceptar|confirmar|eliminar|borrar|exportar|enviar|aplicar|anular|emitir|pagar|s[ií])\b/i;
+// The guard must not depend on the model labelling a click as a commit: any of these verbs on the
+// target sends it to the guard anyway.
+const COMMIT_WORDS =
+  /\b(guardar|grabar|aceptar|confirmar|eliminar|borrar|exportar|enviar|aplicar|anular|emitir|pagar|revertir|reversar|cancelar|bloquear|marcar|facturar|registrar|generar|s[ií])\b/i;
 const MAX_GUARD_BLOCKS = 3;
+// The model acts on the latest screen; older screenshots only add tokens and latency per call.
+// They are dropped in batches, not one per call: rewriting old messages on every call would
+// invalidate the provider's prompt cache and cost more than the screenshots save.
+const KEEP_SCREENSHOTS = 3;
+const PRUNE_BATCH = 5;
 
 mkdirSync(TRACE_DIR, { recursive: true });
 let step = 0;
@@ -252,6 +260,7 @@ async function guardVerdict(ctx: any, action: string, evidence: string): Promise
     `- se cambiaría un dato que la tarea no pide, o el registro visible es otro distinto al de la tarea;\n` +
     `- repetiría una acción ya aprobada que crearía un duplicado;\n` +
     `- la tarea es peligrosa (borrar o cambiar varios registros sin nombrarlos) o revela un secreto.\n` +
+    `Un reporte o exportación no cambia datos: si la app no permite un filtro más exacto que el que pide la tarea, APRUEBA; el agente lo advertirá en su resumen.\n` +
     `Si la pantalla es coherente con la tarea y con la evidencia, APRUEBA. No pidas pruebas de pantallas anteriores: confía en la evidencia salvo que la pantalla la contradiga.\n` +
     `Responde solo JSON: {"aprobar": true|false, "razon": "..."}`;
   try {
@@ -294,6 +303,18 @@ function needsGuard(toolName: string, input: Record<string, unknown>): string | 
 
 export default function (pi: ExtensionAPI) {
   for (const tool of [observe, click, typeInto, fill, choose, press, scroll, finish]) pi.registerTool(tool);
+
+  pi.on("context", (event) => {
+    const withImage = (m: (typeof event.messages)[number]) => m.role === "toolResult" && m.content.some((c) => c.type === "image");
+    const total = event.messages.filter(withImage).length;
+    const cutoff = Math.max(0, Math.floor((total - KEEP_SCREENSHOTS) / PRUNE_BATCH) * PRUNE_BATCH);
+    let seen = 0;
+    const messages = event.messages.map((m) => {
+      if (!withImage(m) || seen++ >= cutoff) return m;
+      return { ...m, content: m.content.map((c) => (c.type === "image" ? { type: "text" as const, text: "[captura anterior omitida]" } : c)) };
+    });
+    return { messages };
+  });
 
   pi.on("tool_call", async (event, ctx) => {
     if (finished) return { block: true, reason: "La tarea ya fue reportada. No hagas nada más." };
