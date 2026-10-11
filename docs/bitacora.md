@@ -48,6 +48,17 @@ cada guardado, un proceso por tarea y medición con un banco de pruebas propio.
 | 16:37 | Corrida 2: 51 de 56 (fáciles 17/17, regulares 22/23, difíciles 12/16), mediana 1 min 3 s | plataforma |
 | 19:30 | Video de 2 minutos con trazas reales de la app de práctica y el panel local | `video/`, `scripts/trace-video.py` |
 
+## Después del cierre: siguiente versión (no se desplegó en producción)
+
+Producción quedó con la versión entregada a las 20:00 (`d876b83`) para la corrida final. Lo de abajo
+corre en local y en la demo pública.
+
+| Hora | Qué | Evidencia |
+| --- | --- | --- |
+| 22:40 | Mejoras sacadas de las fallas de la corrida 2: recorte de capturas por tandas (sin romper el caché del prompt), guarda con más verbos (revertir, cancelar…), verificar identidad, varios registros en serie, listas dependientes, exportar con filtro aproximado | `mejoras-bench.log` |
+| 23:05 | Banco: 14 de 14, 55 s por tarea (antes 65 s), $0.080 (antes $0.072) | `mejoras-bench.log` |
+| 23:00 | Demo pública: historial, ejecutar una tarea del banco y escritorio en vivo, con cupo | [agent.frontier.cuisangelo.com/demo](https://agent.frontier.cuisangelo.com/demo) |
+
 ## Errores nuestros y cómo los corregimos
 
 | Error | Impacto | Corrección |
