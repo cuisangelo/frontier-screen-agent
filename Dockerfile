@@ -7,6 +7,9 @@ RUN corepack enable && corepack prepare pnpm@10.29.3 --activate \
 
 WORKDIR /app
 COPY src ./src
+# The public demo runs only these practice-bench tasks.
+COPY material/pruebas ./material/pruebas
+COPY material/retos ./material/retos
 
 ENV PORT=8080 DATA_DIR=/data PI_BIN=/pnpm/pi \
     AGENT_MODEL=anthropic/claude-sonnet-5.5 GUARD_MODEL=anthropic/claude-haiku-5.5 AGENT_THINKING=high

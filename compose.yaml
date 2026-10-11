@@ -18,6 +18,18 @@ services:
     volumes:
       - data:/data:ro
 
+  # Public demo for judges: practice-bench runs against the practice desktop, own data, capped runs.
+  demo:
+    build: .
+    restart: always
+    # demo.env holds the practice desktop's URL, password and token; only this service gets them.
+    env_file: [.env, demo.env]
+    environment:
+      AGENT_VERSION: ${DEMO_VERSION:-dev}
+      DEMO_MAX_RUNS: "25"
+    volumes:
+      - demo-data:/data
+
   caddy:
     image: caddy:2.8
     restart: always
@@ -32,4 +44,5 @@ services:
 
 volumes:
   data:
+  demo-data:
   caddy:

@@ -63,7 +63,17 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
 .login{max-width:420px;margin:80px auto;padding:24px;border:1px solid var(--line);background:var(--surface)}
 .login input{width:100%;padding:10px;margin:12px 0;background:var(--bg);border:1px solid var(--line-2);color:var(--ink);font:14px var(--mono)}
 .login button{padding:10px 16px;background:var(--accent-deep);border:1px solid var(--accent);color:var(--ink);font:500 13px var(--mono);cursor:pointer}
-@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.list,.detail{max-height:none}}
+.demo{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:24px;padding:20px 24px;border-bottom:1px solid var(--line)}
+.demo img{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:var(--surface);border:1px solid var(--line)}
+.demo h2{margin:0 0 6px;font:600 16px/1.4 var(--sans)}
+.demo p{margin:0 0 14px;color:var(--ink-2)}
+.demo select{width:100%;padding:10px;margin:0 0 10px;background:var(--bg);border:1px solid var(--line-2);color:var(--ink);font:14px var(--sans)}
+.demo .btns{display:flex;gap:10px;flex-wrap:wrap}
+.demo button{padding:10px 16px;background:var(--accent-deep);border:1px solid var(--accent);color:var(--ink);font:500 13px var(--mono);cursor:pointer}
+.demo button.alt{background:none;border-color:var(--line-2)}
+.demo button:disabled{opacity:.45;cursor:not-allowed}
+.demo .note{font:500 12px var(--mono);color:var(--muted);margin-top:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.list,.detail{max-height:none}.demo{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -99,6 +109,9 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
   const hhmm = (iso) => new Date(iso).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const stIcon = { terminada: "check", fallida: "x", en_curso: "clock" };
   const STOP = { tiempo: "tiempo agotado", pi_termino: "el agente se cayó", cancelada: "cancelada", tope_costo: "tope de costo", reinicio: "reinicio del servicio", error_interno: "error interno" };
+  // Served at /panel (private, token) or at /demo (public practice-app demo behind the proxy).
+  const BASE = location.pathname.startsWith("/demo") ? "/demo" : "";
+  const DEMO = BASE === "/demo";
   let token = "";
   try { token = new URLSearchParams(location.search).get("token") || localStorage.getItem("panel-token") || ""; } catch {}
   let selected = null;
@@ -106,7 +119,7 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
   let reasoningOpen = false;
 
   async function api(path) {
-    const r = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(BASE + path, { headers: { Authorization: `Bearer ${token}` } });
     if (r.status === 401) throw new Error("unauthorized");
     return r.json();
   }
@@ -160,7 +173,7 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
     else if (e.action === "finish") { ic = "flag"; what = `Termina: <strong>${esc(e.estado)}</strong>`; }
     else if (e.reconnect) { ic = "plug"; what = "Reconecta con el escritorio"; }
     else if (e.observation) { ic = "eye"; what = esc(e.observation); }
-    const img = e.screenshot ? `<img loading="lazy" alt="Captura del paso ${e.step}" src="/panel/api/tasks/${id}/shot/${e.screenshot}?token=${encodeURIComponent(token)}" ${openShot === `${id}/${e.screenshot}` ? 'class="big"' : ""} data-shot="${id}/${e.screenshot}">` : "";
+    const img = e.screenshot ? `<img loading="lazy" alt="Captura del paso ${e.step}" src="${BASE}/panel/api/tasks/${id}/shot/${e.screenshot}?token=${encodeURIComponent(token)}" ${openShot === `${id}/${e.screenshot}` ? 'class="big"' : ""} data-shot="${id}/${e.screenshot}">` : "";
     return `<li class="step ${cls}"><span class="ic">${icon(ic)}</span><div class="t">#${e.step} · ${hhmm(e.at)}</div><div class="what">${what}</div>${img}</li>`;
   }
 
@@ -190,11 +203,46 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
     if (reasoningOpen) det.dispatchEvent(new Event("toggle"));
   }
 
+  function demoBar() {
+    return `<section class="demo">
+      <img id="screen" alt="Pantalla del escritorio de práctica en vivo">
+      <div><h2>Pruébalo en vivo</h2>
+        <p>Elige una tarea de la app de práctica y mira al agente resolverla: a la izquierda su pantalla en vivo, abajo cada paso con su captura, la guarda y el razonamiento del modelo.</p>
+        <select id="prueba" aria-label="Tarea a ejecutar"></select>
+        <div class="btns"><button id="run">Ejecutar</button><button id="rand" class="alt">Una al azar</button></div>
+        <div class="note" id="quota"></div></div></section>`;
+  }
+
+  async function demoState() {
+    const b = await api("/api/bench");
+    const sel = app.querySelector("#prueba");
+    if (!sel.options.length) sel.innerHTML = b.tareas.map((t) => `<option value="${esc(t.id)}">${esc(t.instruccion)}</option>`).join("");
+    const left = b.maximo - b.usadas;
+    for (const id of ["run", "rand"]) app.querySelector("#" + id).disabled = b.corriendo || left <= 0;
+    app.querySelector("#quota").textContent = left <= 0 ? "Se agotaron las corridas de la demo; el historial sigue disponible."
+      : `${b.corriendo ? "Hay una tarea corriendo. " : ""}Quedan ${left} de ${b.maximo} corridas.`;
+  }
+
+  async function launch(prueba) {
+    for (const id of ["run", "rand"]) app.querySelector("#" + id).disabled = true;
+    const r = await fetch(BASE + "/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prueba }) });
+    const body = await r.json();
+    if (r.ok) { selected = body.task_id; await refresh(); }
+    else app.querySelector("#quota").textContent = body.error;
+  }
+
   async function refresh() {
-    if (!token) return login("Pega el token de solo lectura.");
+    if (!token && !DEMO) return login("Pega el token de solo lectura.");
     let list;
     try { list = await api("/panel/api/tasks"); } catch { return login("El token no es válido."); }
-    if (!app.querySelector(".layout")) app.innerHTML = `<div id="k"></div><div class="layout"><nav class="list" aria-label="Tareas"></nav><section class="detail" aria-live="polite"></section></div>`;
+    if (!app.querySelector(".layout")) {
+      app.innerHTML = `${DEMO ? demoBar() : ""}<div id="k"></div><div class="layout"><nav class="list" aria-label="Tareas"></nav><section class="detail" aria-live="polite"></section></div>`;
+      if (DEMO) {
+        app.querySelector("#run").onclick = () => launch(app.querySelector("#prueba").value);
+        app.querySelector("#rand").onclick = () => launch("azar");
+      }
+    }
+    if (DEMO) await demoState();
     app.querySelector("#k").innerHTML = kpis(list);
     app.querySelector(".list").innerHTML = list.map(row).join("") || `<p class="empty">Todavía no llegan tareas.</p>`;
     await detail();
@@ -207,8 +255,15 @@ details{margin:0 0 16px}details summary{cursor:pointer;font:500 12px var(--mono)
     if (img) { openShot = openShot === img.dataset.shot ? null : img.dataset.shot; img.classList.toggle("big"); }
   });
 
+  if (DEMO) document.querySelector(".top .tag").textContent = "demo pública · app de práctica";
   refresh();
-  setInterval(() => { if (token && document.visibilityState === "visible") refresh().catch(() => {}); }, 5000);
+  setInterval(() => { if ((token || DEMO) && document.visibilityState === "visible") refresh().catch(() => {}); }, 5000);
+  if (DEMO) {
+    // Swap the frame only once the next one has loaded, so the view never flashes empty.
+    const next = new Image();
+    next.onload = () => { const s = app.querySelector("#screen"); if (s) s.src = next.src; };
+    setInterval(() => { if (document.visibilityState === "visible") next.src = `${BASE}/api/live.png?t=${Date.now()}`; }, 1000);
+  }
 })();
 </script>
 </body>

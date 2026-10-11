@@ -1,4 +1,7 @@
 {$AGENT_DOMAIN} {
+	handle_path /demo* {
+		reverse_proxy demo:8080
+	}
 	handle /panel* {
 		reverse_proxy panel:8080
 	}

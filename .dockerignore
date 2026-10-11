@@ -3,7 +3,10 @@
 data
 node_modules
 site
-material
+material/*
+!material/pruebas
+!material/retos
 docs
 eval
 .claude
+demo.env

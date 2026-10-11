@@ -6,6 +6,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { join } from "node:path";
 import { manualsForPrompt, updateManual } from "./agent/manual.ts";
 import { runTask } from "./agent/run-task.ts";
+import { LiveView, loadBench, resetDesktop, RunQuota } from "./demo.ts";
 
 const required = (name: string): string => {
   const v = process.env[name];
@@ -23,6 +24,21 @@ const GUARD_MODEL = required("GUARD_MODEL");
 const AGENT_THINKING = required("AGENT_THINKING");
 const VIEWER_TOKEN = required("VIEWER_TOKEN");
 const AGENT_VERSION = `${process.env.AGENT_VERSION ?? "dev"} · ${AGENT_MODEL} · ${AGENT_THINKING}`;
+// Demo mode: public read-only panel plus runs of the practice bench, capped at this many in total.
+const DEMO_MAX_RUNS = Number(process.env.DEMO_MAX_RUNS ?? 0);
+const demo = DEMO_MAX_RUNS > 0
+  ? (() => {
+      const desktopUrl = required("DESKTOP_URL");
+      const password = required("DESKTOP_PASSWORD");
+      const wsUrl = desktopUrl.replace(/^http/, "ws") + "/websockify";
+      return {
+        desktopUrl, password, wsUrl, token: required("DESKTOP_TOKEN"),
+        bench: loadBench(join(import.meta.dirname, "../material")),
+        quota: new RunQuota(required("DATA_DIR"), DEMO_MAX_RUNS),
+        live: new LiveView(wsUrl, password),
+      };
+    })()
+  : null;
 const PANEL_HTML = readFileSync(join(import.meta.dirname, "panel/index.html"));
 
 type Estado = "en_curso" | "terminada" | "fallida";
@@ -68,6 +84,7 @@ function authorized(req: IncomingMessage): boolean {
 
 /** Read-only panel access: header for API calls, query string for <img> tags. */
 function viewer(req: IncomingMessage, url: URL): boolean {
+  if (demo) return true; // the demo only ever holds practice-app tasks
   const supplied = req.headers.authorization?.replace(/^Bearer /, "") ?? url.searchParams.get("token") ?? "";
   const got = Buffer.from(supplied);
   const want = Buffer.from(VIEWER_TOKEN);
@@ -195,6 +212,65 @@ function startTask(id: string, tarea: string, url: string, password: string): vo
     });
 }
 
+/** Demo routes, served under /demo by the proxy. Returns false when the path is not a demo route. */
+async function demoRoute(req: IncomingMessage, res: ServerResponse, path: string): Promise<boolean> {
+  if (!demo) return false;
+  if (req.method === "GET" && (path === "/" || path === "")) {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(PANEL_HTML);
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/bench") {
+    send(res, 200, { tareas: demo.bench, usadas: demo.quota.used, maximo: demo.quota.max, corriendo: running.size > 0 });
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/live.png") {
+    try {
+      const png = await demo.live.png();
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
+      res.end(png);
+    } catch {
+      send(res, 503, { error: "escritorio no disponible" });
+    }
+    return true;
+  }
+  if (req.method === "POST" && path === "/api/run") {
+    const body = (await readJson(req)) as { prueba?: unknown };
+    const pick = body.prueba === "azar" || body.prueba == null
+      ? demo.bench[Math.floor(Math.random() * demo.bench.length)]
+      : demo.bench.find((b) => b.id === body.prueba);
+    if (!pick) {
+      send(res, 400, { error: "prueba desconocida" });
+      return true;
+    }
+    if (running.size > 0) {
+      send(res, 409, { error: "ya hay una tarea corriendo" });
+      return true;
+    }
+    if (!demo.quota.take()) {
+      send(res, 429, { error: "se agotaron las corridas de la demo" });
+      return true;
+    }
+    const id = randomUUID();
+    save(id, { estado: "en_curso", resumen: "", createdAt: new Date().toISOString(), tarea: pick.instruccion, version: AGENT_VERSION });
+    send(res, 200, { task_id: id, prueba: pick.id });
+    // Reserve the desktop before the reset so a second click gets 409 instead of a parallel run.
+    const hold = new AbortController();
+    running.set(demo.wsUrl, hold);
+    resetDesktop(demo.desktopUrl, demo.token)
+      .then(() => {
+        if (running.get(demo.wsUrl) === hold) running.delete(demo.wsUrl);
+        startTask(id, pick.instruccion, demo.wsUrl, demo.password);
+      })
+      .catch((e: Error) => {
+        running.delete(demo.wsUrl);
+        save(id, { ...tasks.get(id)!, estado: "fallida", resumen: "No se pudo reiniciar el escritorio de práctica.", stopReason: "error_interno", error: e.message });
+      });
+    return true;
+  }
+  return false;
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
   const path = url.pathname;
@@ -202,6 +278,10 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET" && path.startsWith("/panel")) return panelRoute(req, res, url);
     if (req.method === "GET" && path === "/health") {
       return send(res, existsSync(PI_BIN) ? 200 : 503, { ok: existsSync(PI_BIN) });
+    }
+    if (demo) {
+      const handled = await demoRoute(req, res, path);
+      if (handled) return;
     }
     if (req.method === "GET" && path === "/") {
       return send(res, 200, {
