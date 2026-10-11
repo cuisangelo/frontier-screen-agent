@@ -45,6 +45,8 @@ cada guardado, un proceso por tarea y medición con un banco de pruebas propio.
 | 15:42 | Aviso de tiempo corregido: el agente termina si le faltan uno o dos pasos | `d876b83` |
 | 16:00 | SIGECOM pasa de v3.9 a v4.2: corremos el banco completo sobre el tema nuevo | `data/evidencia/sigecom-4.2/` |
 | 16:19 | Tema nuevo: 14 de 14 sin tocar el código (antes 14 de 14); 63 s frente a 52 s por reto | `tema-nuevo-bench.log` |
+| 16:37 | Corrida 2: 51 de 56 (fáciles 17/17, regulares 22/23, difíciles 12/16), mediana 1 min 3 s | plataforma |
+| 19:30 | Video de 2 minutos con trazas reales de la app de práctica y el panel local | `video/`, `scripts/trace-video.py` |
 
 ## Errores nuestros y cómo los corregimos
 

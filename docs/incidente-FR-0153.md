@@ -62,9 +62,9 @@ El diseño nunca dependió de la forma de la app:
 | --- | --- | --- | --- |
 | v1 (antes de adaptar) | 48 | 56 % | 117 s |
 | v3 (adaptada), corrida 1 | 7 | 7 de 7 | 54 s |
-| v3, corrida 2 (primeras tareas) | 7 | 6 de 7 | — |
+| v3, corrida 2 completa | 56 | 51 de 56 según la plataforma | 73 s (mediana 63 s) |
 
-Corrida 1 del set oculto: 33 de 56, la mayoría con la v1. Las tareas que fallaban con la v1
+Corrida 1 del set oculto: 33 de 56, la mayoría con la v1. Corrida 2, toda sobre el tema nuevo: 51 de 56. Las tareas que fallaban con la v1
 (cancelaciones con reverso, citas con autorización, notas por inasistencia) terminan con la v3.
 
 ### Antes y después en la misma app
