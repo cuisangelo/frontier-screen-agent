@@ -13,8 +13,8 @@ const voDir = join(publicDir, "vo");
 mkdirSync(voDir, { recursive: true });
 
 const INSTRUCTIONS =
-  "Habla en español latinoamericano neutro. Tono de presentador de producto tecnológico: seguro, cálido y con energía, " +
-  "ritmo ágil pero claro, sin sonar a anuncio. Pausas breves en los dos puntos. Pronuncia API como 'a pe i' y POST como 'post'.";
+  "Habla en español latinoamericano neutro, como un presentador de producto tecnológico: natural, cálido y seguro, " +
+  "con energía contenida y ritmo ágil, sin tono de anuncio ni de lectura robótica. Pausas breves en los dos puntos. Pronuncia API como 'a pe i' y POST como 'post'.";
 
 async function openai(text: string, out: string): Promise<void> {
   process.loadEnvFile("/Users/cuis/Code/frontier-screen-agent/.env");
@@ -23,7 +23,7 @@ async function openai(text: string, out: string): Promise<void> {
   const res = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "gpt-4o-mini-tts", voice: "coral", input: text, instructions: INSTRUCTIONS, response_format: "wav" }),
+    body: JSON.stringify({ model: "gpt-4o-mini-tts-2025-12-15", voice: "cedar", input: text, instructions: INSTRUCTIONS, response_format: "wav" }),
   });
   if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
   const raw = `${out}.raw.wav`;
