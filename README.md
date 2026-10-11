@@ -3,9 +3,25 @@
 Agente del **Reto 1 de Frontier**: recibe una tarea en lenguaje natural y la ejecuta en una aplicación
 de escritorio que no tiene API, viendo solo la pantalla por VNC, como lo haría una persona.
 
-- Diseño del sistema: [frontier.cuisangelo.com/system-design](https://frontier.cuisangelo.com/system-design) · [`docs/diseno.md`](docs/diseno.md)
-- Respuesta al incidente del cambio de tema: [`docs/incidente-FR-0153.md`](docs/incidente-FR-0153.md)
-- Bitácora del día, con los errores y cómo se corrigieron: [`docs/bitacora.md`](docs/bitacora.md)
+## Pruébalo
+
+| | Enlace |
+| --- | --- |
+| **Demo en vivo** | **[agent.frontier.cuisangelo.com/demo](https://agent.frontier.cuisangelo.com/demo)** |
+| Video de 2 minutos y pitch | [frontier.cuisangelo.com/pitch](https://frontier.cuisangelo.com/pitch) |
+| Diseño del sistema | [frontier.cuisangelo.com/system-design](https://frontier.cuisangelo.com/system-design) · [`docs/diseno.md`](docs/diseno.md) |
+| Respuesta al incidente del cambio de tema | [`docs/incidente-FR-0153.md`](docs/incidente-FR-0153.md) |
+| Bitácora del día, con los errores y cómo se corrigieron | [`docs/bitacora.md`](docs/bitacora.md) |
+
+**Cómo usar la demo:**
+1. Elige una tarea de la lista, o pulsa "Una al azar", y dale **Ejecutar**.
+2. Arriba ves la pantalla del escritorio en vivo mientras el agente trabaja.
+3. Abajo, la tarea aparece "en curso". Ábrela para seguir cada paso, con su captura, lo que revisó la guarda y el razonamiento del modelo.
+
+Detalles:
+- Las tareas son de la app de práctica (SIGECOM). Algunas son trampas a propósito: pedir una clave secreta, un borrado masivo o un cliente con nombre repetido. Ahí lo correcto es que el agente se niegue y explique por qué.
+- Corre una tarea a la vez, y la demo tiene un cupo de corridas.
+- El historial queda visible para todos.
 
 ## Resultados
 
@@ -82,7 +98,14 @@ Panel: `http://localhost:8080/panel?token=<VIEWER_TOKEN>`.
 
 ## Desplegar
 
-Corre en AWS EC2 con Docker Compose: el agente, un panel de solo lectura y Caddy con HTTPS automático.
+Corre en AWS EC2 con Docker Compose: el agente, un panel de solo lectura, la demo pública y Caddy
+con HTTPS automático.
+
+La demo (`/demo`) es otra instancia del mismo servidor con `DEMO_MAX_RUNS`:
+- Tiene su propio volumen de datos.
+- Solo corre las tareas del banco, una a la vez, hasta el cupo.
+- Muestra el escritorio de práctica en vivo, renderizado en el servidor.
+- Sus credenciales van en un `demo.env` aparte (`DESKTOP_URL`, `DESKTOP_PASSWORD`, `DESKTOP_TOKEN`), así que nunca llegan al agente de producción ni al navegador.
 
 ```sh
 # en el servidor, con el repo en /opt/agent y el .env completo
