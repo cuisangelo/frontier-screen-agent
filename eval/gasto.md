@@ -50,3 +50,4 @@ Banco del tema 4.2 (21:02–21:19 UTC, 14 tareas): costo real según `pi` $1.006
 | 2026-10-10T21:52:00Z | E2 por el entrypoint local, para el video | anthropic/claude-sonnet-5.5 (high) | $0.0668 (pi) | — |
 | 2026-10-11T01:12:00Z | Demo debrief: E1 + E2 por el entrypoint local | anthropic/claude-sonnet-5.5 (high) | $0.1482 (pi) | — |
 | 2026-10-11T01:15:36Z | Demo debrief: E1 (1 tarea) | anthropic/claude-sonnet-5.5 (high) | $0.0711 (pi) | — |
+| 2026-10-11T01:45:00Z | Demo debrief: E2 (1 tarea) | anthropic/claude-sonnet-5.5 (high) | $0.0775 (pi) | — |
